@@ -1,0 +1,178 @@
+{
+  "gluten": {
+    "label": "Gluten",
+    "eu_number": 1,
+    "synonyms": [
+      "wheat", "wheat flour", "wheat starch", "wheat protein", "wheat gluten",
+      "barley", "barley malt", "barley extract", "barley flour",
+      "rye", "rye flour", "rye bread",
+      "oats", "oat flour", "oat bran",
+      "spelt", "spelt flour",
+      "kamut", "khorasan wheat",
+      "triticum", "hordeum", "secale", "avena sativa",
+      "semolina", "durum wheat", "einkorn", "emmer",
+      "bulgur", "farro", "freekeh", "triticale",
+      "gluten", "vital wheat gluten"
+    ]
+  },
+  "crustaceans": {
+    "label": "Crustaceans",
+    "eu_number": 2,
+    "synonyms": [
+      "crab", "crab meat", "crabmeat",
+      "lobster", "lobster meat",
+      "shrimp", "shrimps",
+      "prawns", "prawn",
+      "crayfish", "crawfish",
+      "langoustine", "langoustines",
+      "barnacle", "krill",
+      "crustacean", "crustaceans",
+      "scampi"
+    ]
+  },
+  "eggs": {
+    "label": "Eggs",
+    "eu_number": 3,
+    "synonyms": [
+      "egg", "eggs", "dried egg", "powdered egg",
+      "egg white", "egg whites", "egg yolk", "egg yolks",
+      "albumen", "egg albumen",
+      "ovalbumin", "ovomucin",
+      "lysozyme", "egg lecithin",
+      "mayonnaise", "meringue", "globulin",
+      "livetin", "ovomucoid", "ovovitellin", "silici albuminate"
+    ]
+  },
+  "fish": {
+    "label": "Fish",
+    "eu_number": 4,
+    "synonyms": [
+      "fish", "fish sauce", "fish stock", "fish oil", "fish gelatin",
+      "anchovy", "anchovies", "bass", "bream", "carp", "cod",
+      "dab", "eel", "flounder", "grouper", "haddock", "hake",
+      "halibut", "herring", "mackerel", "mahi-mahi", "marlin",
+      "orange roughy", "pangasius", "perch", "pike", "pilchard",
+      "plaice", "pollock", "salmon", "sardine", "sardines",
+      "shark", "skate", "sole", "sprat", "swordfish", "tilapia",
+      "trout", "tuna", "turbot", "whitebait", "whiting",
+      "caviar", "roe", "worcestershire sauce", "caesar dressing"
+    ]
+  },
+  "peanuts": {
+    "label": "Peanuts",
+    "eu_number": 5,
+    "synonyms": [
+      "peanut", "peanuts", "groundnut", "groundnuts",
+      "monkey nuts", "arachis oil", "peanut oil",
+      "peanut butter", "peanut flour", "peanut protein",
+      "mixed nuts", "beer nuts"
+    ]
+  },
+  "soybeans": {
+    "label": "Soybeans",
+    "eu_number": 6,
+    "synonyms": [
+      "soya", "soy", "soybean", "soybeans",
+      "edamame", "tofu", "tempeh", "miso",
+      "soy sauce", "tamari", "textured soy protein",
+      "soy protein", "soy flour", "soy lecithin",
+      "textured vegetable protein", "tvp", "tsp",
+      "natto", "yuba", "okara", "kinako",
+      "soy milk", "soybean oil", "soy isolate"
+    ]
+  },
+  "milk": {
+    "label": "Milk",
+    "eu_number": 7,
+    "synonyms": [
+      "milk", "milk powder", "skimmed milk", "whole milk",
+      "lactose", "whey", "whey powder", "whey protein",
+      "casein", "caseinate", "sodium caseinate", "calcium caseinate",
+      "cream", "butter", "buttermilk", "ghee",
+      "cheese", "yoghurt", "yogurt", "curd",
+      "lactalbumin", "lactoglobulin", "lactulose",
+      "dairy", "milk solids", "milk fat",
+      "half-and-half", "sour cream", "kefir", "quark",
+      "fromage frais", "mascarpone", "ricotta",
+      "rennet casein", "hydrolised whey"
+    ]
+  },
+  "nuts": {
+    "label": "Nuts",
+    "eu_number": 8,
+    "synonyms": [
+      "almond", "almonds", "almond oil", "almond flour",
+      "hazelnut", "hazelnuts", "hazelnut oil",
+      "walnut", "walnuts", "walnut oil",
+      "cashew", "cashews", "cashew nut",
+      "pecan", "pecans",
+      "pistachio", "pistachios",
+      "macadamia", "macadamia nuts", "macadamia nut",
+      "brazil nut", "brazil nuts",
+      "pine nut", "pine nuts", "pignoli",
+      "nut", "nuts", "mixed nuts", "tree nut",
+      "queensland nut", "marzipan", "praline",
+      "gianduja", "nougat"
+    ]
+  },
+  "celery": {
+    "label": "Celery",
+    "eu_number": 9,
+    "synonyms": [
+      "celery", "celery seed", "celery salt", "celery oil",
+      "celeriac", "celery root", "celery extract",
+      "celery leaf", "celery stalk"
+    ]
+  },
+  "mustard": {
+    "label": "Mustard",
+    "eu_number": 10,
+    "synonyms": [
+      "mustard", "mustard seeds", "mustard seed",
+      "mustard flour", "mustard oil", "mustard leaves",
+      "mustard powder", "mustard paste",
+      "yellow mustard", "dijon mustard", "wholegrain mustard",
+      "sinapis", "brassica"
+    ]
+  },
+  "sesame": {
+    "label": "Sesame",
+    "eu_number": 11,
+    "synonyms": [
+      "sesame", "sesame seeds", "sesame oil",
+      "tahini", "tahina", "sesame paste",
+      "sesame flour", "til", "gingelly oil",
+      "benne", "benniseed"
+    ]
+  },
+  "sulphites": {
+    "label": "Sulphites / Sulphur dioxide",
+    "eu_number": 12,
+    "synonyms": [
+      "sulphur dioxide", "sulfur dioxide", "sulphites", "sulfites",
+      "SO2", "E220", "E221", "E222", "E223", "E224", "E225", "E226", "E227", "E228",
+      "potassium bisulphite", "sodium bisulphite", "sodium metabisulphite",
+      "potassium metabisulphite", "calcium sulphite",
+      "dried fruit", "wine", "vinegar"
+    ]
+  },
+  "lupin": {
+    "label": "Lupin",
+    "eu_number": 13,
+    "synonyms": [
+      "lupin", "lupine", "lupin flour", "lupin seed",
+      "lupin protein", "lupin bean", "lupin extract"
+    ]
+  },
+  "molluscs": {
+    "label": "Molluscs",
+    "eu_number": 14,
+    "synonyms": [
+      "oyster", "oysters", "mussel", "mussels",
+      "clam", "clams", "scallop", "scallops",
+      "squid", "calamari", "octopus", "abalone",
+      "periwinkle", "snail", "escargot", "whelk",
+      "cuttlefish", "mollusc", "molluscs", "shellfish"
+    ]
+  }
+}

@@ -1,0 +1,517 @@
+/* ============================================================
+   LabelLens UI — Dark Science Kiosk Theme
+   Exhibition-ready: readable at 1 metre, high contrast
+   ============================================================ */
+
+/* ---- CSS Variables ---- */
+:root {
+  --bg-primary:   #0A0F1E;
+  --bg-secondary: #111827;
+  --bg-card:      #161D2F;
+  --bg-elevated:  #1E2A3A;
+  --accent:       #00FF87;
+  --accent-dim:   #00CC6E;
+  --accent-glow:  rgba(0, 255, 135, 0.15);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted:   #64748B;
+  --danger:       #FF4757;
+  --warning:      #FFB347;
+  --success:      #00FF87;
+  --border:       rgba(255, 255, 255, 0.08);
+  --radius:       16px;
+  --radius-sm:    8px;
+  --radius-pill:  9999px;
+
+  /* Grade colours */
+  --grade-a: #00C851;
+  --grade-b: #7BC67E;
+  --grade-c: #FFD700;
+  --grade-d: #FF9800;
+  --grade-e: #FF4444;
+
+  /* Flag colours */
+  --flag-sugar:    #FFB347;
+  --flag-allergen: #FF4757;
+  --flag-additive: #A78BFA;
+  --flag-palm:     #F97316;
+}
+
+/* ============================================================
+   GLOBAL RESET
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+.stApp {
+  background: var(--bg-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+               system-ui, sans-serif;
+  color: var(--text-primary) !important;
+}
+
+/* Remove Streamlit chrome */
+#MainMenu          { display: none !important; }
+footer             { display: none !important; }
+.stDeployButton    { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+
+header[data-testid="stHeader"] {
+  background: rgba(10, 15, 30, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.main .block-container {
+  padding: 2rem 2rem 5rem !important;
+  max-width: 1200px !important;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1 {
+  color: var(--text-primary) !important;
+  letter-spacing: -0.03em !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+}
+
+h2 {
+  color: var(--text-primary) !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 700 !important;
+}
+
+h3 {
+  color: var(--text-secondary) !important;
+  letter-spacing: -0.01em !important;
+  font-weight: 600 !important;
+}
+
+p, .stMarkdown p {
+  color: var(--text-secondary) !important;
+  line-height: 1.6 !important;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.stTabs [data-baseweb="tab-list"] {
+  background: var(--bg-secondary) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 4px !important;
+  gap: 0 !important;
+  border: 1px solid var(--border) !important;
+  overflow: visible !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 10px 24px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: all 220ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.stTabs [aria-selected="true"] {
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 16px rgba(0, 255, 135, 0.35) !important;
+}
+
+.stTabs [data-baseweb="tab-panel"] {
+  padding-top: 28px !important;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.stButton > button {
+  background: var(--accent) !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  padding: 12px 28px !important;
+  letter-spacing: 0.01em !important;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 160ms ease,
+              background 160ms ease !important;
+  box-shadow: 0 4px 20px rgba(0, 255, 135, 0.2) !important;
+  cursor: pointer !important;
+  width: 100% !important;
+}
+
+.stButton > button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 32px rgba(0, 255, 135, 0.35) !important;
+  background: #1AFFA0 !important;
+}
+
+.stButton > button:active {
+  transform: scale(0.97) !important;
+  box-shadow: 0 2px 8px rgba(0, 255, 135, 0.2) !important;
+}
+
+/* Secondary / outline buttons */
+.stButton > button[kind="secondary"] {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.stButton > button[kind="secondary"]:hover {
+  background: var(--bg-card) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.stTextInput input,
+.stNumberInput input,
+.stTextArea textarea {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+.stTextInput input:focus,
+.stNumberInput input:focus,
+.stTextArea textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  outline: none !important;
+}
+
+.stTextInput label,
+.stNumberInput label,
+.stTextArea label,
+.stSelectbox label {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Selectbox */
+.stSelectbox > div > div {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+}
+
+.stSelectbox > div > div:focus-within {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+[data-testid="stSidebar"] {
+  background: var(--bg-secondary) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+  padding: 2rem 1rem !important;
+}
+
+[data-testid="stSidebar"] .stMarkdown { color: var(--text-secondary) !important; }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 { color: var(--text-primary) !important; }
+
+[data-testid="stSidebar"] hr {
+  border-color: var(--border) !important;
+  margin: 1.5rem 0 !important;
+}
+
+/* ============================================================
+   METRIC CARDS
+   ============================================================ */
+[data-testid="stMetric"] {
+  background: var(--bg-card) !important;
+  border-radius: var(--radius) !important;
+  padding: 20px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 200ms ease !important;
+}
+
+[data-testid="stMetric"]:hover {
+  transform: translateY(-2px) !important;
+}
+
+[data-testid="stMetricLabel"] {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+[data-testid="stMetricValue"] {
+  color: var(--text-primary) !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+}
+
+[data-testid="stMetricDelta"] { font-size: 13px !important; }
+
+/* ============================================================
+   SPINNER
+   ============================================================ */
+.stSpinner > div {
+  border-color: var(--accent) transparent transparent transparent !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+.stSuccess {
+  background: rgba(0, 255, 135, 0.08) !important;
+  border: 1px solid var(--accent) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--accent) !important;
+}
+
+.stError {
+  background: rgba(255, 71, 87, 0.08) !important;
+  border: 1px solid var(--danger) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--danger) !important;
+}
+
+.stWarning {
+  background: rgba(255, 179, 71, 0.08) !important;
+  border: 1px solid var(--warning) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--warning) !important;
+}
+
+.stInfo {
+  background: rgba(96, 165, 250, 0.08) !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ============================================================
+   TABLES / DATAFRAMES
+   ============================================================ */
+.stDataFrame,
+[data-testid="stTable"] {
+  background: var(--bg-card) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+  overflow: hidden !important;
+}
+
+.stDataFrame th {
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+.stDataFrame td {
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+/* ============================================================
+   CAMERA INPUT
+   ============================================================ */
+[data-testid="stCameraInput"] {
+  background: var(--bg-card) !important;
+  border: 2px dashed var(--border) !important;
+  border-radius: var(--radius) !important;
+  transition: border-color 200ms ease !important;
+}
+
+[data-testid="stCameraInput"]:hover {
+  border-color: var(--accent) !important;
+}
+
+[data-testid="stCameraInput"] video {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ============================================================
+   FILE UPLOADER
+   ============================================================ */
+[data-testid="stFileUploadDropzone"] {
+  background: var(--bg-card) !important;
+  border: 2px dashed var(--border) !important;
+  border-radius: var(--radius) !important;
+  transition: border-color 200ms ease, background 200ms ease !important;
+}
+
+[data-testid="stFileUploadDropzone"]:hover {
+  border-color: var(--accent) !important;
+  background: rgba(0, 255, 135, 0.04) !important;
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+.stProgress > div > div > div {
+  background: var(--accent) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 135, 0.4) !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+.stProgress > div > div {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+/* ============================================================
+   EXPANDER
+   ============================================================ */
+.streamlit-expanderHeader {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.streamlit-expanderContent {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border) !important;
+  border-top: none !important;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+}
+
+/* ============================================================
+   COLUMNS SPACING
+   ============================================================ */
+[data-testid="column"] {
+  padding: 0 8px !important;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* ============================================================
+   GLOBAL KEYFRAMES
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 20px rgba(255, 23, 68, 0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+
+@keyframes gradeFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes scoreReveal {
+  from { width: 0; }
+  to   { width: var(--target-width); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 135, 0.2); }
+  50%       { box-shadow: 0 0 40px rgba(0, 255, 135, 0.5); }
+}
+
+/* ============================================================
+   SKELETON LOADER
+   ============================================================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+.ll-hero {
+  animation: fadeInUp 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* ============================================================
+   CARD BASE
+   ============================================================ */
+.ll-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow:
+    0  2px  4px rgba(0,0,0,0.3),
+    0  8px 24px rgba(0,0,0,0.3),
+    0 20px 48px rgba(0,0,0,0.2);
+  transition: transform 220ms cubic-bezier(0.23,1,0.32,1),
+              box-shadow 220ms ease;
+}
+
+.ll-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0  4px  8px rgba(0,0,0,0.4),
+    0 12px 32px rgba(0,0,0,0.4),
+    0 24px 56px rgba(0,0,0,0.3);
+}
+
+/* Stagger animation utility */
+.stagger-1  { animation: fadeInUp 500ms 60ms  cubic-bezier(0.23,1,0.32,1) both; }
+.stagger-2  { animation: fadeInUp 500ms 120ms cubic-bezier(0.23,1,0.32,1) both; }
+.stagger-3  { animation: fadeInUp 500ms 180ms cubic-bezier(0.23,1,0.32,1) both; }
+.stagger-4  { animation: fadeInUp 500ms 240ms cubic-bezier(0.23,1,0.32,1) both; }
+.stagger-5  { animation: fadeInUp 500ms 300ms cubic-bezier(0.23,1,0.32,1) both; }
+.stagger-6  { animation: fadeInUp 500ms 360ms cubic-bezier(0.23,1,0.32,1) both; }
