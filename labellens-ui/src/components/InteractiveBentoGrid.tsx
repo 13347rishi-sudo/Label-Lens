@@ -49,16 +49,16 @@ export function InteractiveBentoGrid({
   };
 
   return (
-    <div className="w-full rounded-3xl apple-glass p-6 md:p-8 space-y-6">
+    <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
       
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-base font-semibold text-white">
-            Nutritional Composition
+            Nutrition per 100g
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Normalized per 100g / 100ml according to EU regulation 1169/2011
+            Standard amounts per 100g (or 100ml for drinks)
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export function InteractiveBentoGrid({
             }`}
           >
             <Sliders size={14} />
-            <span>{showSliders ? 'Hide Sliders' : 'Simulate Reformulation'}</span>
+            <span>{showSliders ? 'Hide Sliders' : 'Adjust Recipe'}</span>
           </button>
 
           {showSliders && (

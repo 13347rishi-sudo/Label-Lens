@@ -7,21 +7,20 @@ import { InteractiveBentoGrid } from './components/InteractiveBentoGrid';
 import { ChemicalInspector } from './components/ChemicalInspector';
 import { ComparisonArena } from './components/ComparisonArena';
 import { ExhibitionPitchModal } from './components/ExhibitionPitchModal';
-import { QrCodeInspector } from './components/QrCodeInspector';
 import { HealthierAlternativesCard } from './components/HealthierAlternativesCard';
 
-import { EXHIBITION_PRODUCTS, lookupProductLive } from './lib/database';
+import { EXHIBITION_PRODUCTS } from './lib/database';
 import { scoreProduct } from './lib/scoring';
 import { analyzeIngredients } from './lib/knowledge';
 import { applyHealthProfile, HEALTH_PROFILES } from './lib/profiles';
-import { playAlertBuzzer, playSuccessChime } from './lib/sound';
+import { playAlertBuzzer } from './lib/sound';
 import type { HealthProfileId, ProductItem, Per100g } from './lib/types';
-import { Camera, Flask, Sliders, Scales, QrCode } from '@phosphor-icons/react';
+import { Camera, Flask, Sliders, Scales } from '@phosphor-icons/react';
 
-type TabType = 'overview' | 'ingredients' | 'reformulate' | 'duel' | 'qr';
+type TabType = 'overview' | 'ingredients' | 'reformulate' | 'duel';
 
 export function App() {
-  const [selectedModel, setSelectedModel] = useState<string>('qwen3-vl:8b');
+  const [selectedModel, setSelectedModel] = useState<string>('qwen3.5:2b');
   const [activeProfile, setActiveProfile] = useState<HealthProfileId>('general');
   const [currentProduct, setCurrentProduct] = useState<ProductItem>(EXHIBITION_PRODUCTS[0]);
   const [liveNutrition, setLiveNutrition] = useState<Per100g>(EXHIBITION_PRODUCTS[0].per_100g);
@@ -42,16 +41,6 @@ export function App() {
       if (isNutProduct) {
         playAlertBuzzer();
       }
-    }
-  };
-
-  const handleScanQrPayload = async (payload: string) => {
-    const prod = await lookupProductLive(payload);
-    if (prod) {
-      playSuccessChime();
-      handleSelectProduct(prod);
-    } else {
-      playAlertBuzzer();
     }
   };
 
@@ -85,7 +74,7 @@ export function App() {
       />
 
       {/* Main Content Container with Macro-Whitespace */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8 space-y-7">
+      <main className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-7">
         
         {/* Apple Style Segmented View Switcher - Horizontally scrollable on mobile */}
         <div className="w-full flex items-center justify-start sm:justify-center overflow-x-auto scrollbar-none py-1 px-1">
@@ -99,7 +88,7 @@ export function App() {
               }`}
             >
               <Camera size={15} />
-              <span>Scanner & Overview</span>
+              <span>Scan & Results</span>
             </button>
 
             <button
@@ -123,7 +112,7 @@ export function App() {
               }`}
             >
               <Sliders size={15} />
-              <span>Reformulation Lab</span>
+              <span>Adjust Recipe</span>
             </button>
 
             <button
@@ -135,19 +124,7 @@ export function App() {
               }`}
             >
               <Scales size={15} />
-              <span>Product Duel</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('qr')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] shrink-0 ${
-                activeTab === 'qr'
-                  ? 'bg-white text-black shadow-sm font-semibold'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
-              }`}
-            >
-              <QrCode size={15} />
-              <span>2D QR Bench</span>
+              <span>Compare Foods</span>
             </button>
           </div>
         </div>
@@ -168,8 +145,8 @@ export function App() {
               <div className="lg:col-span-7 apple-glass p-5 sm:p-6 rounded-3xl space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
                   <div>
-                    <h3 className="text-sm font-semibold text-white">Food Catalog ({EXHIBITION_PRODUCTS.length}+ Items)</h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">Instant benchmark analysis across staples, snacks, drinks & sweets</p>
+                    <h3 className="text-sm font-semibold text-white">Sample Foods ({EXHIBITION_PRODUCTS.length}+ Items)</h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">Tap any product to inspect its health rating</p>
                   </div>
                   <div className="text-xs text-zinc-400 hidden sm:block">
                     Active: <span className="font-semibold text-white">{currentProduct.product_name}</span>
@@ -267,28 +244,6 @@ export function App() {
         {activeTab === 'duel' && (
           <div className="animate-fadeIn">
             <ComparisonArena />
-          </div>
-        )}
-
-        {/* Tab 5: 2D QR Code Intelligence Bench */}
-        {activeTab === 'qr' && (
-          <div className="space-y-8 animate-fadeIn">
-            <QrCodeInspector
-              product={currentProduct}
-              onScanQr={handleScanQrPayload}
-            />
-
-            <VerdictCard
-              product={currentProduct}
-              scoringResult={scoringResult}
-              profileAdjustment={profileAdjustment}
-              activeProfileName={activeProfileData.name}
-            />
-
-            <HealthierAlternativesCard
-              product={currentProduct}
-              onSelectProduct={handleSelectProduct}
-            />
           </div>
         )}
 

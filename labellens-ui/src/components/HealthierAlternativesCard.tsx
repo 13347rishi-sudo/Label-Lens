@@ -42,7 +42,7 @@ export function HealthierAlternativesCard({
   };
 
   return (
-    <div className="w-full rounded-3xl apple-glass p-5 md:p-7 space-y-6">
+    <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-7 space-y-5 sm:space-y-6">
       
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
@@ -53,21 +53,21 @@ export function HealthierAlternativesCard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                Healthier Smart Alternatives & Whole Food Swaps
+                Healthier Alternatives
               </h3>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
-                Nutri-Score A/B
+                Grade A / B
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Evidence-based nutritional upgrades for <span className="text-zinc-200 font-medium">{product.product_name}</span>
+              Better options instead of <span className="text-zinc-200 font-medium">{product.product_name}</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-zinc-400 self-start sm:self-auto">
           <ShieldCheck size={16} className="text-emerald-400" />
-          <span>Lower sugar & sat. fat · Higher bioavailable fiber</span>
+          <span>Less sugar & fat · More fiber & protein</span>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export function HealthierAlternativesCard({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 px-1">
             <Package size={15} className="text-sky-400" />
-            <span>Packaged Smarter Alternatives ({packagedSwaps.length})</span>
+            <span>Healthier Packaged Foods ({packagedSwaps.length})</span>
           </div>
 
           <div className="space-y-3">
@@ -96,7 +96,7 @@ export function HealthierAlternativesCard({
                       <div className="flex items-center gap-2 text-xs text-zinc-400">
                         {swap.brand && <span className="font-medium text-zinc-300">{swap.brand}</span>}
                         {swap.brand && <span>·</span>}
-                        <span className="text-sky-400 text-[11px] font-medium">Packaged Clean Swap</span>
+                        <span className="text-sky-400 text-[11px] font-medium">Packaged</span>
                       </div>
                       <h4 className="text-sm font-bold text-white tracking-tight">
                         {swap.name}
@@ -143,11 +143,11 @@ export function HealthierAlternativesCard({
           </div>
         </div>
 
-        {/* Column 2: Whole Natural Foods & Ancient Staples (Pulses, Millets, Seeds) */}
+        {/* Column 2: Natural Whole Foods (Pulses, Millets, Fruits) */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 px-1">
             <Plant size={15} className="text-emerald-400" />
-            <span>Whole Natural Foods & Ancient Staples ({naturalSwaps.length})</span>
+            <span>Natural Foods (Millets, Pulses, Fruit) ({naturalSwaps.length})</span>
           </div>
 
           <div className="space-y-3">
@@ -167,7 +167,7 @@ export function HealthierAlternativesCard({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <span className="text-emerald-400 font-semibold text-[11px] uppercase tracking-wider">
-                          100% Unprocessed Whole Food
+                          Natural Food
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-white tracking-tight">
@@ -218,7 +218,7 @@ export function HealthierAlternativesCard({
       {/* Educational Micronutrient Note */}
       <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between text-xs text-zinc-400 flex-wrap gap-2">
         <p className="flex items-center gap-1.5">
-          <span className="text-emerald-400 font-semibold">Tip:</span> Whole natural foods (millets, pulses, seeds) preserve cellular food matrix structure, drastically flattening post-prandial glycemic spikes.
+          <span className="text-emerald-400 font-semibold">Tip:</span> Whole foods like millets, pulses, and seeds contain complex fiber that slows digestion and prevents rapid blood sugar spikes.
         </p>
         <span className="text-[11px] text-zinc-500 font-mono">WHO & FSSAI Guidelines</span>
       </div>

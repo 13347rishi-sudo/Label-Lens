@@ -17,10 +17,10 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-base font-semibold text-white">
-            Ingredient Intelligence
+            Ingredients Breakdown
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            50+ hidden sugar aliases, palm oil variants, and EFSA additive classifications
+            Checks for hidden sugars, palm oils, food additives, and allergens
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
           ) : (
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-zinc-400 flex items-center gap-2">
               <CheckCircle size={16} className="text-emerald-400" />
-              <span>No covert or hidden sugar aliases detected in this formulation.</span>
+              <span>No hidden sugars found in this product.</span>
             </div>
           )}
         </div>
@@ -142,7 +142,7 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
               {knowledge.palm_oil.map((p, idx) => (
                 <div key={idx} className="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-xs">
                   <div className="font-semibold text-orange-200">{p.name}</div>
-                  <div className="text-zinc-400 mt-1">Matched text: <span className="text-zinc-200">"{p.matched_text}"</span></div>
+                  <div className="text-zinc-400 mt-1">Found in label: <span className="text-zinc-200">"{p.matched_text}"</span></div>
                   {p.description && <div className="text-[11px] text-orange-300/80 mt-1">{p.description}</div>}
                 </div>
               ))}
@@ -150,7 +150,7 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
           ) : (
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-zinc-400 flex items-center gap-2">
               <CheckCircle size={16} className="text-emerald-400" />
-              <span>No palm oil derivatives or fractionated palm fats detected.</span>
+              <span>No palm oil found in this product.</span>
             </div>
           )}
         </div>
@@ -165,17 +165,17 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-red-200">{a.name}</span>
                     <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">
-                      Major Allergen
+                      Allergen
                     </span>
                   </div>
-                  <div className="text-zinc-400 mt-1">Matched text: <span className="text-zinc-200">"{a.matched_text}"</span></div>
+                  <div className="text-zinc-400 mt-1">Found in label: <span className="text-zinc-200">"{a.matched_text}"</span></div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-zinc-400 flex items-center gap-2">
               <CheckCircle size={16} className="text-emerald-400" />
-              <span>No major allergens explicitly declared in ingredients. Always verify physical packaging.</span>
+              <span>No major allergens listed in ingredients. Check packet if severely allergic.</span>
             </div>
           )}
         </div>
@@ -195,14 +195,14 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
                       {ad.severity?.toUpperCase() || 'INFO'}
                     </span>
                   </div>
-                  <div className="text-zinc-400 mt-1">Matched text: <span className="text-zinc-200">"{ad.matched_text}"</span></div>
+                  <div className="text-zinc-400 mt-1">Found in label: <span className="text-zinc-200">"{ad.matched_text}"</span></div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-zinc-400 flex items-center gap-2">
               <CheckCircle size={16} className="text-emerald-400" />
-              <span>No high-concern synthetic additives or E-numbers identified.</span>
+              <span>No concerning additives or artificial preservatives found.</span>
             </div>
           )}
         </div>

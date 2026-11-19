@@ -86,6 +86,9 @@ export interface ProductItem {
   ingredients: string[];
   allergens_stated: string[];
   description: string;
+  is_veg?: boolean;
+  fssai_license?: string;
+  source_engine?: 'local' | 'openfoodfacts' | 'gs1_india' | 'ollama_vision';
   healthier_alternatives?: HealthierAlternative[];
 }
 

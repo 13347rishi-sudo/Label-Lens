@@ -108,10 +108,10 @@ export function ComparisonArena() {
       {/* Header Banner */}
       <div className="text-center max-w-xl mx-auto space-y-1">
         <h2 className="text-2xl font-bold tracking-tight text-white">
-          Side-by-Side Comparison Duel
+          Compare Two Foods
         </h2>
         <p className="text-xs text-zinc-400">
-          Evaluates two products according to European Nutri-Score standards to determine the nutritionally superior formulation.
+          Pick any two foods to see which one is healthier and compare their nutrients side by side.
         </p>
       </div>
 
@@ -124,13 +124,13 @@ export function ComparisonArena() {
       {/* Verdict Conclusion Card */}
       <div className="p-5 rounded-3xl apple-glass flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
         <div>
-          <div className="text-xs text-zinc-400">Duel Conclusion</div>
+          <div className="text-xs text-zinc-400">Healthier Choice</div>
           <div className="text-sm font-semibold text-white mt-0.5">
             <span className="text-emerald-400 font-bold">{winner === 'A' ? prodA.product_name : prodB.product_name}</span> is healthier by <span className="font-mono text-emerald-300">+{scoreDiff}</span> points.
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-zinc-400">
-          <span>Official European algorithm</span>
+          <span>Nutri-Score rating</span>
           <ArrowRight size={14} />
         </div>
       </div>

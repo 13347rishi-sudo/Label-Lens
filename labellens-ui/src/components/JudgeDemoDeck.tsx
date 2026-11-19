@@ -11,14 +11,14 @@ interface JudgeDemoDeckProps {
 }
 
 const CATEGORY_TABS = [
-  { id: 'all', label: 'All Catalog' },
-  { id: 'grade_a', label: 'Grade A Top Choices' },
+  { id: 'all', label: 'All Foods' },
+  { id: 'grade_a', label: 'Grade A (Healthy)' },
   { id: 'staples', label: 'Millets & Pulses' },
-  { id: 'drinks', label: 'Beverages' },
+  { id: 'drinks', label: 'Drinks' },
   { id: 'snacks', label: 'Snacks & Chips' },
   { id: 'cereals', label: 'Breakfast Cereals' },
-  { id: 'sweets', label: 'Confectionery' },
-  { id: 'dairy', label: 'Dairy & Plant-based' }
+  { id: 'sweets', label: 'Chocolates & Sweets' },
+  { id: 'dairy', label: 'Dairy & Milk' }
 ];
 
 export function JudgeDemoDeck({ onSelectProduct, selectedProductId }: JudgeDemoDeckProps) {

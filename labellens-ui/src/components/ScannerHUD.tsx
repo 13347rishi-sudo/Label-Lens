@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Camera,
-  QrCode,
+  Barcode,
   UploadSimple,
   MagnifyingGlass,
   CameraRotate,
@@ -9,7 +9,8 @@ import {
   Aperture,
   DeviceMobileCamera,
   Globe,
-  Lightning
+  Lightning,
+  Sparkle
 } from '@phosphor-icons/react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { playBarcodeBeep, playSuccessChime, playAlertBuzzer } from '../lib/sound';
@@ -20,6 +21,7 @@ import {
   scanImageFileWithAllEngines,
   getOptimizedZxingReader
 } from '../lib/barcodeScanner';
+import { extractNutritionWithOllama, checkOllamaAvailable } from '../lib/ollamaVision';
 import type { ProductItem } from '../lib/types';
 
 interface ScannerHUDProps {
@@ -106,33 +108,33 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
 
     setIsScanning(true);
     const preview = code.length > 35 ? `${code.slice(0, 32)}...` : code;
-    setScanStatus(`Identifying: ${preview}...`);
+    setScanStatus(`Looking up ${preview}...`);
 
     try {
       const product = await lookupProductLive(code);
       if (product) {
         playSuccessChime();
-        setScanStatus(`Identified: ${product.product_name} (${product.brand})`);
+        setScanStatus(`Found: ${product.product_name} (${product.brand})`);
         onProductResolved(product);
       } else {
         playAlertBuzzer();
-        setScanStatus(`Scanned: "${preview}". No matching food product found in database or Open Food Facts.`);
+        setScanStatus(`Scanned "${preview}". Product not found in database.`);
       }
     } catch {
       playAlertBuzzer();
-      setScanStatus(`Network error looking up: ${preview}`);
+      setScanStatus(`Could not look up: ${preview}`);
     } finally {
       setIsScanning(false);
     }
   }, [onProductResolved]);
 
-  // Start live webcam or mobile video stream with Hardware BarcodeDetector + ZXing
+  // Start camera stream
   const startCamera = async () => {
     setCameraError(null);
-    setScanStatus('Starting high-precision camera stream...');
+    setScanStatus('Opening camera...');
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError('Live video requires HTTPS on mobile devices. Use "Snap with Phone Camera" below!');
+      setCameraError('Camera requires HTTPS on mobile browsers. Use "Take Photo" below.');
       return;
     }
 
@@ -152,7 +154,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       }
 
       setCameraActive(true);
-      setScanStatus('Center barcode or 2D QR in frame to scan');
+      setScanStatus('Center food barcode in frame to scan');
 
       // 1. Configure optimized ZXing as fallback
       const codeReader = getOptimizedZxingReader();
@@ -217,39 +219,54 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
     }
   };
 
-  // Decode barcode/QR directly from an image file (e.g. snapped with phone camera or uploaded)
+  // Decode barcode/QR directly from an image file, with automatic AI Vision fallback
   const processImageFile = async (file: File) => {
     setIsScanning(true);
     playBarcodeBeep();
-    setScanStatus(`Analyzing image with ${selectedModel} & multi-engine vision...`);
+    setScanStatus(`Scanning image...`);
 
     try {
       const detectedText = await scanImageFileWithAllEngines(file);
       if (detectedText) {
-        setScanStatus(`Decoded: ${detectedText}`);
+        setScanStatus(`Found Barcode: ${detectedText}`);
         await handleBarcodeScanned(detectedText);
         return;
       }
     } catch (err) {
-      console.warn('File scan error:', err);
+      console.warn('Barcode scan error:', err);
+    }
+
+    // No barcode found: activate local AI to read the nutrition label table
+    setScanStatus(`No barcode found. Reading ingredients label with AI...`);
+    try {
+      const isUp = await checkOllamaAvailable();
+      if (isUp) {
+        const aiProduct = await extractNutritionWithOllama(file, selectedModel);
+        playSuccessChime();
+        setScanStatus(`Found: ${aiProduct.product_name} (${aiProduct.brand})`);
+        onProductResolved(aiProduct);
+        setIsScanning(false);
+        return;
+      }
+    } catch (aiErr) {
+      console.warn('Vision AI fallback error:', aiErr);
     }
 
     setIsScanning(false);
     playAlertBuzzer();
-    setScanStatus(`No barcode or 2D QR code found in "${file.name}". Please ensure code is clear and well-lit.`);
+    setScanStatus(`Could not find a barcode or nutrition table. Try a clearer photo.`);
   };
 
-  // Capture static frame from live video and run all multi-engine passes
-  const captureAndAnalyze = async () => {
+  // Capture static frame from live video and run barcode scan + AI Vision fallback
+  const captureAndAnalyze = async (forceVisionAi = false) => {
     const video = videoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
-      setScanStatus('Camera stream not ready. Please try again.');
+      setScanStatus('Camera not ready. Please try again.');
       return;
     }
 
     setIsScanning(true);
     playBarcodeBeep();
-    setScanStatus(`Running multi-pass scan on captured frame...`);
 
     try {
       const canvas = document.createElement('canvas');
@@ -258,19 +275,37 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const detectedText = await scanCanvasWithAllEngines(canvas);
-        if (detectedText) {
-          await handleBarcodeScanned(detectedText);
+
+        if (!forceVisionAi) {
+          setScanStatus(`Scanning barcode...`);
+          const detectedText = await scanCanvasWithAllEngines(canvas);
+          if (detectedText) {
+            await handleBarcodeScanned(detectedText);
+            return;
+          }
+        }
+
+        // Run Ollama Vision AI
+        setScanStatus(`Reading nutrition table with AI...`);
+        const isUp = await checkOllamaAvailable();
+        if (isUp) {
+          const aiProduct = await extractNutritionWithOllama(canvas, selectedModel);
+          playSuccessChime();
+          setScanStatus(`Found: ${aiProduct.product_name} (${aiProduct.brand})`);
+          onProductResolved(aiProduct);
+          setIsScanning(false);
           return;
+        } else {
+          setScanStatus('AI model is offline. Please start Ollama.');
         }
       }
-    } catch {
-      // Frame scan failed
+    } catch (err) {
+      console.warn('Capture & analyze error:', err);
     }
 
     setIsScanning(false);
     playAlertBuzzer();
-    setScanStatus('No barcode or 2D QR detected in this frame. Align code in reticle.');
+    setScanStatus('No barcode or food label detected. Hold still and try again.');
   };
 
   return (
@@ -325,16 +360,16 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <QrCode size={14} />
+            <Barcode size={14} />
             <span>Barcode & Search</span>
           </button>
         </div>
 
-        {/* Hardware Detector Status Badge */}
+        {/* Fast Scanner Status Badge */}
         {isNativeBarcodeDetectorSupported() && (
           <div className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
             <Lightning size={12} weight="fill" />
-            <span>Hardware AI Engine (60fps)</span>
+            <span>Fast Scanner Ready</span>
           </div>
         )}
 
@@ -383,33 +418,33 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
                 <Camera size={24} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Smart Packaging & Barcode Scanner</p>
+                <p className="text-sm font-semibold text-white">Scan Food Package</p>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Point at any 1D barcode stripes, 2D QR code, or nutrition label
+                  Point camera at a barcode or nutrition table
                 </p>
               </div>
 
               {/* Primary Dual Shutter Options for Phone & Desktop */}
               <div className="flex flex-col sm:flex-row items-center gap-2 pt-1 w-full max-w-xs">
                 
-                {/* Mobile Phone Native Camera Button (Guaranteed to work on all phones) */}
+                {/* Mobile Phone Native Camera Button */}
                 <button
                   type="button"
                   onClick={() => nativeCameraInputRef.current?.click()}
                   className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md min-h-[44px]"
                 >
                   <DeviceMobileCamera size={18} weight="bold" />
-                  <span>Snap with Phone</span>
+                  <span>Take Photo</span>
                 </button>
 
-                {/* Live Stream Camera (Webcam / HTTPS) */}
+                {/* Live Stream Camera */}
                 <button
                   type="button"
                   onClick={startCamera}
                   className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md min-h-[44px]"
                 >
                   <Camera size={16} />
-                  <span>Live Stream</span>
+                  <span>Open Camera</span>
                 </button>
               </div>
 
@@ -424,10 +459,10 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           {/* Active Viewfinder Overlays */}
           {cameraActive && (
             <>
-              {/* High-tech Scanning Laser Beam Animation */}
+              {/* Scan Line Beam */}
               <div className="absolute inset-x-8 top-12 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent pointer-events-none animate-scanline shadow-[0_0_12px_rgba(52,199,89,0.9)]" />
 
-              {/* Apple-style Corner Reticle Brackets */}
+              {/* Reticle Brackets */}
               <div className="absolute inset-8 pointer-events-none">
                 <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg transition-colors ${
                   justScanned ? 'border-emerald-400' : 'border-white/70'
@@ -444,32 +479,45 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
               </div>
 
               {/* Shutter Action Buttons */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 px-4">
+              <div className="absolute bottom-4 left-0 right-0 flex flex-wrap justify-center items-center gap-2 px-3">
                 <button
-                  onClick={captureAndAnalyze}
+                  type="button"
+                  onClick={() => captureAndAnalyze(false)}
                   disabled={isScanning}
-                  className="px-4 py-2.5 rounded-full bg-white/90 hover:bg-white text-black font-semibold text-xs flex items-center gap-2 shadow-lg backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[44px]"
+                  className="px-3.5 py-2 rounded-full bg-white/95 hover:bg-white text-black font-semibold text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[40px]"
                 >
                   {isScanning ? (
                     <>
-                      <CircleNotch size={15} className="animate-spin text-black" />
-                      <span>Reading Barcode...</span>
+                      <CircleNotch size={14} className="animate-spin text-black" />
+                      <span>Scanning...</span>
                     </>
                   ) : (
                     <>
-                      <Aperture size={16} />
-                      <span>Capture & Analyze</span>
+                      <Aperture size={15} />
+                      <span>Scan Barcode</span>
                     </>
                   )}
+                </button>
+
+                {/* AI Label Reading Button */}
+                <button
+                  type="button"
+                  onClick={() => captureAndAnalyze(true)}
+                  disabled={isScanning}
+                  className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-500/90 to-emerald-500/90 hover:from-amber-400 hover:to-emerald-400 text-black font-semibold text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[40px]"
+                  title="Read nutrition facts table with AI"
+                >
+                  <Sparkle size={14} weight="fill" />
+                  <span>Read Label (AI)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => nativeCameraInputRef.current?.click()}
-                  className="px-3.5 py-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white font-medium text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/20 transition-all active:scale-95 min-h-[44px]"
+                  className="px-3 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white font-medium text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/20 transition-all active:scale-95 min-h-[40px]"
                 >
-                  <DeviceMobileCamera size={16} />
-                  <span>Phone Shutter</span>
+                  <DeviceMobileCamera size={15} />
+                  <span>Photo</span>
                 </button>
               </div>
             </>
@@ -489,8 +537,8 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           }`}
         >
           <UploadSimple size={32} className="text-zinc-400 mb-2" />
-          <p className="text-xs font-medium text-white">Drop or upload packaging photo</p>
-          <p className="text-[11px] text-zinc-500 mt-1">Multi-pass hardware detection + contrast binarization</p>
+          <p className="text-xs font-medium text-white">Drop or upload a photo</p>
+          <p className="text-[11px] text-zinc-500 mt-1">Upload a clear photo of the barcode or ingredients list.</p>
           
           <div className="flex items-center gap-2 mt-4">
             <button
@@ -499,11 +547,11 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
               className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 min-h-[44px]"
             >
               <DeviceMobileCamera size={16} weight="bold" />
-              <span>Camera Photo</span>
+              <span>Take Photo</span>
             </button>
 
             <label className="px-3.5 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-xs font-medium text-white cursor-pointer transition-all active:scale-95 flex items-center min-h-[44px]">
-              Browse Files
+              Choose Photo
               <input
                 type="file"
                 accept="image/*"
@@ -518,9 +566,9 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       ) : (
         <div className="w-full aspect-[4/3] rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 flex flex-col items-center justify-center text-center">
           <Globe size={32} className="text-sky-400 mb-2" />
-          <p className="text-sm font-bold text-white mb-1">Universal Barcode & Global Product Search</p>
+          <p className="text-sm font-bold text-white mb-1">Search Food or Barcode</p>
           <p className="text-xs text-zinc-400 mb-4 max-w-sm">
-            Enter ANY barcode number or product name. LabelLens instantly queries local benchmark catalog + Open Food Facts live global database (3.3M+ products)!
+            Type any product name (e.g. Maggi, Amul Milk) or barcode number.
           </p>
           <form
             onSubmit={(e) => {
@@ -531,7 +579,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           >
             <input
               type="text"
-              placeholder="e.g. 5449000000996, 8901058852318, or Maggi"
+              placeholder="e.g. Maggi, Amul Milk, or 8901058852318"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
@@ -545,7 +593,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             </button>
           </form>
           <div className="flex flex-wrap justify-center gap-1.5 mt-3 text-[11px] text-zinc-500">
-            <span>Examples:</span>
+            <span>Try:</span>
             <button
               type="button"
               onClick={() => handleBarcodeScanned('8901058852318')}

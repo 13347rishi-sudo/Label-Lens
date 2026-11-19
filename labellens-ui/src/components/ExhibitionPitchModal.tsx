@@ -27,44 +27,44 @@ export function ExhibitionPitchModal({ isOpen, onClose }: ExhibitionPitchModalPr
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">
-              Science Exhibition Project Overview
+              About LabelLens
             </h2>
             <p className="text-xs text-zinc-400">
-              Offline Edge-AI Nutritional Intelligence & Transparency
+              Science Exhibition Project — Food Transparency Scanner
             </p>
           </div>
         </div>
 
-        {/* Section 1: The Problem & Solution */}
+        {/* Section 1: The Problem */}
         <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-1.5">
           <div className="flex items-center gap-2 text-xs font-semibold text-white">
             <Brain size={16} className="text-emerald-400" />
-            <span>The Research Problem</span>
+            <span>The Problem We Are Solving</span>
           </div>
           <p className="text-xs text-zinc-300 leading-relaxed">
-            Ultra-processed foods often obscure high glycemic loads and industrial fats behind 50+ sugar aliases (maltodextrin, invert syrup) and deceptive "per serving" metrics. LabelLens enables consumers to hold any package up to a camera and obtain an immediate, unvarnished nutritional verdict on local edge hardware with zero cloud dependencies.
+            Many packaged snacks look healthy on the front, but hide large amounts of sugar and palm oil under names like maltodextrin, invert syrup, or INS numbers. Companies also use tiny serving sizes to make calories look low. LabelLens scans any barcode or package to show what is actually inside, helping you make healthier choices.
           </p>
         </div>
 
-        {/* Section 2: Technical Highlights */}
+        {/* Section 2: How It Works */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.06] space-y-1">
             <div className="flex items-center gap-1.5 font-semibold text-white">
               <Cpu size={15} className="text-blue-400" />
-              <span>Edge Vision Multimodal</span>
+              <span>On-Device AI Vision</span>
             </div>
             <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Runs locally via Ollama with Qwen3-VL 8B or MiniCPM-V 4.5. Never transmits personal dietary data to the cloud.
+              Reads barcodes in milliseconds and uses local AI to extract nutrition tables from package photos without uploading anything to external servers.
             </p>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.06] space-y-1">
             <div className="flex items-center gap-1.5 font-semibold text-white">
               <ShieldCheck size={15} className="text-emerald-400" />
-              <span>Official European Algorithm</span>
+              <span>Nutri-Score Rating</span>
             </div>
             <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Deterministic Python calculation of Nutri-Score (A through E) with distinct thresholds for solids and beverages.
+              Uses the international A to E nutrition scale, balancing healthy nutrients (fiber, protein) against nutrients to limit (sugar, salt, saturated fat).
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export function ExhibitionPitchModal({ isOpen, onClose }: ExhibitionPitchModalPr
             onClick={onClose}
             className="w-full py-2.5 rounded-xl bg-white text-black font-semibold text-xs shadow-sm hover:bg-zinc-200 transition-all active:scale-98"
           >
-            Dismiss Overview
+            Close
           </button>
         </div>
 

@@ -98,11 +98,11 @@ export function Navbar({
               onChange={(e) => onSelectModel(e.target.value)}
               className="bg-transparent text-zinc-300 text-xs focus:outline-none cursor-pointer"
             >
+              <option value="qwen3.5:2b" className="bg-[#16161E] text-white">
+                qwen3.5:2b (Local Vision)
+              </option>
               <option value="qwen3-vl:8b" className="bg-[#16161E] text-white">
                 qwen3-vl:8b
-              </option>
-              <option value="qwen3.5:2b" className="bg-[#16161E] text-white">
-                qwen3.5:2b
               </option>
               <option value="qwen2.5:2b" className="bg-[#16161E] text-white">
                 qwen2.5:2b

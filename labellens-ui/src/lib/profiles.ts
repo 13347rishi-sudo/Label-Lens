@@ -5,40 +5,40 @@ export const HEALTH_PROFILES: HealthProfile[] = [
     id: 'general',
     name: 'General Adult',
     icon: '🛡️',
-    tagline: 'Standard European Nutri-Score',
-    description: 'Balanced population reference with no specific clinical dietary restrictions.',
+    tagline: 'Standard Health Score',
+    description: 'Standard health scoring for everyday adults with no special restrictions.',
     badgeColor: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
   },
   {
     id: 'diabetic',
     name: 'Diabetic / Pre-diabetic',
     icon: '🩸',
-    tagline: 'Strict Sugar & Glycemic Index Focus',
-    description: 'Doubles sugar penalty weight. Emits critical warnings for products exceeding 15g sugar/100g.',
+    tagline: 'Low Sugar Focus',
+    description: 'Stricter on sugar. Warns when sugar exceeds 15g per 100g.',
     badgeColor: 'border-amber-500/30 text-amber-400 bg-amber-500/10'
   },
   {
     id: 'nut_allergy',
     name: 'Severe Nut Allergy',
     icon: '🥜',
-    tagline: 'Zero-Tolerance Anaphylaxis Shield',
-    description: 'Instantly triggers emergency red DO NOT BUY banner on peanut or tree nut detection.',
+    tagline: 'Nut Allergy Safe',
+    description: 'Warns immediately if peanuts or tree nuts are found.',
     badgeColor: 'border-red-500/30 text-red-400 bg-red-500/10'
   },
   {
     id: 'child',
     name: 'Child (Under 10)',
     icon: '👶',
-    tagline: 'Pediatric Protection Protocol',
-    description: 'Flags artificial Southampton six azo food dyes, caffeine, high saturated fats, and high sugars.',
+    tagline: 'Kids Nutrition',
+    description: 'Watches out for artificial food dyes, caffeine, high sugar, and saturated fat.',
     badgeColor: 'border-purple-500/30 text-purple-400 bg-purple-500/10'
   },
   {
     id: 'blood_pressure',
     name: 'High Blood Pressure',
     icon: '🫀',
-    tagline: 'Hypertension & Sodium Vigilance',
-    description: 'Multiplies salt/sodium penalty by 2.5x. Hard warning on foods exceeding 1.5g salt/100g.',
+    tagline: 'Low Sodium & Salt',
+    description: 'Stricter on salt. Warns if salt exceeds 1.5g per 100g.',
     badgeColor: 'border-rose-500/30 text-rose-400 bg-rose-500/10'
   }
 ];
@@ -63,11 +63,11 @@ export function applyHealthProfile(
     if (nutMatches.length > 0) {
       hardWarnings.push({
         severity: 'CRITICAL',
-        message: `🚨 FATAL ALLERGEN DETECTED: Contains ${nutMatches.map(n => n.name).join(' & ')}! DO NOT CONSUME.`,
+        message: `⚠️ Contains ${nutMatches.map(n => n.name).join(' & ')}! Do not eat if allergic to nuts.`,
         flag: 'allergen'
       });
       adjustedScore = 1.0;
-      reasons.push('Contains life-threatening nut allergens for sensitized individuals.');
+      reasons.push('Contains peanuts or tree nuts.');
     }
   }
 
