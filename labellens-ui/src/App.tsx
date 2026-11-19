@@ -13,7 +13,6 @@ import { EXHIBITION_PRODUCTS } from './lib/database';
 import { scoreProduct } from './lib/scoring';
 import { analyzeIngredients } from './lib/knowledge';
 import { applyHealthProfile, HEALTH_PROFILES } from './lib/profiles';
-import { playAlertBuzzer } from './lib/sound';
 import type { HealthProfileId, ProductItem, Per100g } from './lib/types';
 import { Camera, Scales } from '@phosphor-icons/react';
 
@@ -36,12 +35,6 @@ export function App() {
   // Profile selection
   const handleSelectProfile = (id: HealthProfileId) => {
     setActiveProfile(id);
-    if (id === 'nut_allergy') {
-      const isNutProduct = ['prod_nutella', 'prod_snickers', 'prod_ferrero', 'prod_cadbury_fruit_nut'].includes(currentProduct.id);
-      if (isNutProduct) {
-        playAlertBuzzer();
-      }
-    }
   };
 
   // Calculate live score

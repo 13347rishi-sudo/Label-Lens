@@ -81,7 +81,7 @@ export function Navbar({
                 }`}
               >
                 <span className="text-xs">{p.icon}</span>
-                <span>{p.name.split(' ')[0]}</span>
+                <span>{p.name}</span>
               </button>
             );
           })}

@@ -48,7 +48,7 @@ export interface KnowledgeAnalysis {
   warnings: string[];
 }
 
-export type HealthProfileId = 'general' | 'diabetic' | 'nut_allergy' | 'child' | 'blood_pressure';
+export type HealthProfileId = 'general' | 'diabetic';
 
 export interface HealthProfile {
   id: HealthProfileId;

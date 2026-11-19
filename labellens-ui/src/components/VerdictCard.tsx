@@ -1,4 +1,5 @@
-import { WarningCircle, CheckCircle, ShieldCheck, Sparkle, TrendDown, TrendUp } from '@phosphor-icons/react';
+import { useState } from 'react';
+import { WarningCircle, CheckCircle, ShieldCheck, Sparkle, TrendDown, TrendUp, ChartLineUp, CaretDown, CaretUp } from '@phosphor-icons/react';
 import type { NutriGrade, ProfileAdjustment, ProductItem, ScoringResult } from '../lib/types';
 import { getGradeColor } from '../lib/scoring';
 
@@ -26,6 +27,7 @@ export function VerdictCard({
   profileAdjustment,
   activeProfileName
 }: VerdictCardProps) {
+  const [showDetailedMath, setShowDetailedMath] = useState(false);
   const grade = scoringResult.grade;
   const finalScore = Math.max(0, Math.min(10, profileAdjustment.adjusted_score));
   const gradeColor = getGradeColor(grade);
@@ -348,83 +350,107 @@ export function VerdictCard({
         </div>
       </div>
 
-      {/* Points Breakdown: Bad Nutrients vs Good Nutrients */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
-          <span className="text-zinc-300 font-semibold">Points Balance: Unhealthy vs Healthy Nutrients</span>
-          <span className="text-xs text-zinc-400">
-            Final Raw Score: <strong className="text-white font-mono">{scoringResult.raw_score}</strong>
+      {/* Collapsible Scientific Points Breakdown (Reduces Visual Noise) */}
+      <div className="pt-1">
+        <button
+          type="button"
+          onClick={() => setShowDetailedMath(!showDetailedMath)}
+          className="w-full flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.06] text-xs text-zinc-300 font-medium transition-all active:scale-98"
+        >
+          <span className="flex items-center gap-2">
+            <ChartLineUp size={16} className="text-sky-400" />
+            <span>{showDetailedMath ? 'Hide Scientific Points Formula' : 'View Scientific Points Breakdown'}</span>
           </span>
-        </div>
-
-        {/* Visual Balance Bar */}
-        <div className="h-2.5 w-full rounded-full bg-white/[0.06] overflow-hidden flex">
-          <div
-            style={{ width: `${Math.min(100, (scoringResult.N_points / 40) * 100)}%` }}
-            className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-700"
-            title={`Points to limit: ${scoringResult.N_points}`}
-          />
-          <div
-            style={{ width: `${Math.min(100, (scoringResult.P_points / 15) * 100)}%` }}
-            className="h-full bg-emerald-500 transition-all duration-700"
-            title={`Healthy points: ${scoringResult.P_points}`}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-0.5">
-          <div className="flex items-center gap-1.5 text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
-            <TrendDown size={14} className="shrink-0 text-amber-400" />
-            <span>Points to limit: <strong className="text-white">{scoringResult.N_points}</strong> <span className="text-zinc-400 text-[11px]">(Sugar, Sat Fat, Salt, Cal)</span></span>
+          <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
+            <span className="font-mono hidden sm:inline">
+              Raw Score: {scoringResult.raw_score}
+            </span>
+            {showDetailedMath ? <CaretUp size={14} /> : <CaretDown size={14} />}
           </div>
-          <div className="flex items-center gap-1.5 text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-            <TrendUp size={14} className="shrink-0 text-emerald-400" />
-            <span>Healthy points: <strong className="text-white">{scoringResult.P_points}</strong> <span className="text-zinc-400 text-[11px]">(Fiber, Protein, Fruit/Veg)</span></span>
-          </div>
-        </div>
-      </div>
+        </button>
 
-      {/* Nutrition Factor Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        
-        {/* Healthy Factors */}
-        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-            <CheckCircle size={16} weight="fill" />
-            <span>Healthy Nutrients</span>
-          </div>
-          <ul className="space-y-1.5 text-xs text-zinc-300">
-            {scoringResult.breakdown
-              .filter((b) => b.direction === 'good')
-              .map((item, idx) => (
-                <li key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 gap-0.5">
-                  <span className="text-zinc-400 text-xs">{item.factor}</span>
-                  <span className="font-medium text-xs text-emerald-300">+{item.points} pts <span className="text-zinc-500 text-[11px]">({item.explanation})</span></span>
-                </li>
-              ))}
-            {scoringResult.breakdown.filter((b) => b.direction === 'good').length === 0 && (
-              <li className="text-zinc-500 py-1">Low in fiber, protein, and fruit.</li>
-            )}
-          </ul>
-        </div>
+        {showDetailedMath && (
+          <div className="space-y-4 pt-3 animate-fadeIn">
+            {/* Points Breakdown: Bad Nutrients vs Good Nutrients */}
+            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+                <span className="text-zinc-300 font-semibold">Points Balance: Unhealthy vs Healthy Nutrients</span>
+                <span className="text-xs text-zinc-400">
+                  Final Raw Score: <strong className="text-white font-mono">{scoringResult.raw_score}</strong>
+                </span>
+              </div>
 
-        {/* Nutrients to Watch */}
-        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
-            <WarningCircle size={16} weight="fill" />
-            <span>Nutrients to Limit</span>
-          </div>
-          <ul className="space-y-1.5 text-xs text-zinc-300">
-            {scoringResult.breakdown
-              .filter((b) => b.direction === 'bad')
-              .map((item, idx) => (
-                <li key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 gap-0.5">
-                  <span className="text-zinc-400 text-xs">{item.factor}</span>
-                  <span className="font-medium text-xs text-amber-300">+{item.points} pts <span className="text-zinc-500 text-[11px]">({item.explanation})</span></span>
-                </li>
-              ))}
-          </ul>
-        </div>
+              {/* Visual Balance Bar */}
+              <div className="h-2.5 w-full rounded-full bg-white/[0.06] overflow-hidden flex">
+                <div
+                  style={{ width: `${Math.min(100, (scoringResult.N_points / 40) * 100)}%` }}
+                  className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-700"
+                  title={`Points to limit: ${scoringResult.N_points}`}
+                />
+                <div
+                  style={{ width: `${Math.min(100, (scoringResult.P_points / 15) * 100)}%` }}
+                  className="h-full bg-emerald-500 transition-all duration-700"
+                  title={`Healthy points: ${scoringResult.P_points}`}
+                />
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-0.5">
+                <div className="flex items-center gap-1.5 text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
+                  <TrendDown size={14} className="shrink-0 text-amber-400" />
+                  <span>Points to limit: <strong className="text-white">{scoringResult.N_points}</strong> <span className="text-zinc-400 text-[11px]">(Sugar, Sat Fat, Salt, Cal)</span></span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                  <TrendUp size={14} className="shrink-0 text-emerald-400" />
+                  <span>Healthy points: <strong className="text-white">{scoringResult.P_points}</strong> <span className="text-zinc-400 text-[11px]">(Fiber, Protein, Fruit/Veg)</span></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Nutrition Factor Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              
+              {/* Healthy Factors */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                  <CheckCircle size={16} weight="fill" />
+                  <span>Healthy Nutrients</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-zinc-300">
+                  {scoringResult.breakdown
+                    .filter((b) => b.direction === 'good')
+                    .map((item, idx) => (
+                      <li key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 gap-0.5">
+                        <span className="text-zinc-400 text-xs">{item.factor}</span>
+                        <span className="font-medium text-xs text-emerald-300">+{item.points} pts <span className="text-zinc-500 text-[11px]">({item.explanation})</span></span>
+                      </li>
+                    ))}
+                  {scoringResult.breakdown.filter((b) => b.direction === 'good').length === 0 && (
+                    <li className="text-zinc-500 py-1">Low in fiber, protein, and fruit.</li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Nutrients to Watch */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
+                  <WarningCircle size={16} weight="fill" />
+                  <span>Nutrients to Limit</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-zinc-300">
+                  {scoringResult.breakdown
+                    .filter((b) => b.direction === 'bad')
+                    .map((item, idx) => (
+                      <li key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 gap-0.5">
+                        <span className="text-zinc-400 text-xs">{item.factor}</span>
+                        <span className="font-medium text-xs text-amber-300">+{item.points} pts <span className="text-zinc-500 text-[11px]">({item.explanation})</span></span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        )}
       </div>
 
     </div>
