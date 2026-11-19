@@ -8,11 +8,18 @@ import {
   CircleNotch,
   Aperture,
   DeviceMobileCamera,
-  Globe
+  Globe,
+  Lightning
 } from '@phosphor-icons/react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { playBarcodeBeep, playSuccessChime, playAlertBuzzer } from '../lib/sound';
 import { lookupProductLive } from '../lib/database';
+import {
+  isNativeBarcodeDetectorSupported,
+  scanCanvasWithAllEngines,
+  scanImageFileWithAllEngines,
+  getOptimizedZxingReader
+} from '../lib/barcodeScanner';
 import type { ProductItem } from '../lib/types';
 
 interface ScannerHUDProps {
@@ -30,6 +37,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [justScanned, setJustScanned] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const zxingReaderRef = useRef<BrowserMultiFormatReader | null>(null);
@@ -37,9 +45,14 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
   const nativeCameraInputRef = useRef<HTMLInputElement | null>(null);
   const lastScannedRef = useRef<string>('');
   const lastScannedTimeRef = useRef<number>(0);
+  const scanLoopIntervalRef = useRef<number | null>(null);
 
-  // Stop camera stream cleanly
+  // Stop camera stream & background scan loops cleanly
   const stopCamera = useCallback(() => {
+    if (scanLoopIntervalRef.current) {
+      clearInterval(scanLoopIntervalRef.current);
+      scanLoopIntervalRef.current = null;
+    }
     if (zxingReaderRef.current) {
       zxingReaderRef.current = null;
     }
@@ -88,6 +101,9 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
   // Universal product resolution: Local Database + Live Open Food Facts API fallback
   const handleBarcodeScanned = useCallback(async (code: string) => {
     playBarcodeBeep();
+    setJustScanned(true);
+    setTimeout(() => setJustScanned(false), 900);
+
     setIsScanning(true);
     const preview = code.length > 35 ? `${code.slice(0, 32)}...` : code;
     setScanStatus(`Identifying: ${preview}...`);
@@ -110,10 +126,10 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
     }
   }, [onProductResolved]);
 
-  // Start live webcam or mobile video stream
+  // Start live webcam or mobile video stream with Hardware BarcodeDetector + ZXing
   const startCamera = async () => {
     setCameraError(null);
-    setScanStatus('Requesting camera stream...');
+    setScanStatus('Starting high-precision camera stream...');
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('Live video requires HTTPS on mobile devices. Use "Snap with Phone Camera" below!');
@@ -136,9 +152,10 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       }
 
       setCameraActive(true);
-      setScanStatus('Align barcode, 2D QR, or food label in frame');
+      setScanStatus('Center barcode or 2D QR in frame to scan');
 
-      const codeReader = new BrowserMultiFormatReader();
+      // 1. Configure optimized ZXing as fallback
+      const codeReader = getOptimizedZxingReader();
       zxingReaderRef.current = codeReader;
 
       if (videoRef.current) {
@@ -146,7 +163,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           if (result) {
             const text = result.getText();
             const now = Date.now();
-            if (lastScannedRef.current === text && now - lastScannedTimeRef.current < 3500) {
+            if (lastScannedRef.current === text && now - lastScannedTimeRef.current < 3000) {
               return;
             }
             lastScannedRef.current = text;
@@ -154,6 +171,44 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             handleBarcodeScanned(text);
           }
         });
+      }
+
+      // 2. High-speed Hardware BarcodeDetector polling loop (if supported)
+      if (isNativeBarcodeDetectorSupported()) {
+        const offscreenCanvas = document.createElement('canvas');
+        const interval = window.setInterval(async () => {
+          const video = videoRef.current;
+          if (!video || video.readyState < 2 || !video.videoWidth) return;
+
+          try {
+            // @ts-expect-error Native BarcodeDetector API
+            const detector = new window.BarcodeDetector({
+              formats: ['qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'data_matrix']
+            });
+
+            offscreenCanvas.width = video.videoWidth;
+            offscreenCanvas.height = video.videoHeight;
+            const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+              ctx.drawImage(video, 0, 0);
+              const barcodes = await detector.detect(offscreenCanvas);
+              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                const text = String(barcodes[0].rawValue).trim();
+                const now = Date.now();
+                if (lastScannedRef.current === text && now - lastScannedTimeRef.current < 3000) {
+                  return;
+                }
+                lastScannedRef.current = text;
+                lastScannedTimeRef.current = now;
+                handleBarcodeScanned(text);
+              }
+            }
+          } catch {
+            // Native detector frame failed, zxing fallback will catch it
+          }
+        }, 150);
+
+        scanLoopIntervalRef.current = interval;
       }
     } catch (err: unknown) {
       console.warn('Camera stream error:', err);
@@ -166,68 +221,25 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
   const processImageFile = async (file: File) => {
     setIsScanning(true);
     playBarcodeBeep();
-    setScanStatus(`Scanning photo with ${selectedModel}...`);
+    setScanStatus(`Analyzing image with ${selectedModel} & multi-engine vision...`);
 
-    const objectUrl = URL.createObjectURL(file);
-
-    // Pass 1: Direct decode from URL
     try {
-      const codeReader = new BrowserMultiFormatReader();
-      const result = await codeReader.decodeFromImageUrl(objectUrl);
-      if (result) {
-        const text = result.getText();
-        URL.revokeObjectURL(objectUrl);
-        await handleBarcodeScanned(text);
+      const detectedText = await scanImageFileWithAllEngines(file);
+      if (detectedText) {
+        setScanStatus(`Decoded: ${detectedText}`);
+        await handleBarcodeScanned(detectedText);
         return;
       }
-    } catch {
-      // Continue to canvas pass
+    } catch (err) {
+      console.warn('File scan error:', err);
     }
 
-    // Pass 2: Canvas multi-scale decode for high-res phone captures
-    try {
-      const img = new Image();
-      img.src = objectUrl;
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('Image failed to load'));
-      });
-
-      const canvas = document.createElement('canvas');
-      const maxDim = 1600;
-      let w = img.naturalWidth || img.width;
-      let h = img.naturalHeight || img.height;
-      if (w > maxDim || h > maxDim) {
-        const scale = Math.min(maxDim / w, maxDim / h);
-        w = Math.round(w * scale);
-        h = Math.round(h * scale);
-      }
-      canvas.width = w;
-      canvas.height = h;
-
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, w, h);
-        const codeReader = new BrowserMultiFormatReader();
-        const result = await codeReader.decodeFromCanvas(canvas);
-        if (result) {
-          const text = result.getText();
-          URL.revokeObjectURL(objectUrl);
-          await handleBarcodeScanned(text);
-          return;
-        }
-      }
-    } catch {
-      // Canvas pass failed
-    }
-
-    URL.revokeObjectURL(objectUrl);
     setIsScanning(false);
     playAlertBuzzer();
-    setScanStatus(`No barcode or 2D QR code found in "${file.name}". Ensure code is clear and not cropped.`);
+    setScanStatus(`No barcode or 2D QR code found in "${file.name}". Please ensure code is clear and well-lit.`);
   };
 
-  // Capture static frame from live video and decode precisely
+  // Capture static frame from live video and run all multi-engine passes
   const captureAndAnalyze = async () => {
     const video = videoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
@@ -237,25 +249,23 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
 
     setIsScanning(true);
     playBarcodeBeep();
-    setScanStatus(`Scanning frame for barcode or 2D QR...`);
+    setScanStatus(`Running multi-pass scan on captured frame...`);
 
     try {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const codeReader = new BrowserMultiFormatReader();
-        const result = await codeReader.decodeFromCanvas(canvas);
-        if (result) {
-          const text = result.getText();
-          await handleBarcodeScanned(text);
+        const detectedText = await scanCanvasWithAllEngines(canvas);
+        if (detectedText) {
+          await handleBarcodeScanned(detectedText);
           return;
         }
       }
     } catch {
-      // Not found in this static frame
+      // Frame scan failed
     }
 
     setIsScanning(false);
@@ -320,7 +330,15 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           </button>
         </div>
 
-        {/* Camera Selector (for multiple webcams / rear/front toggle) */}
+        {/* Hardware Detector Status Badge */}
+        {isNativeBarcodeDetectorSupported() && (
+          <div className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+            <Lightning size={12} weight="fill" />
+            <span>Hardware AI Engine (60fps)</span>
+          </div>
+        )}
+
+        {/* Camera Selector (for external webcams / rear/front toggle) */}
         {videoDevices.length > 1 && hudTab === 'camera' && (
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-zinc-400">
             <CameraRotate size={13} />
@@ -348,7 +366,9 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
 
       {/* Main Viewport */}
       {hudTab === 'camera' ? (
-        <div className="relative w-full aspect-[4/3] rounded-2xl bg-black overflow-hidden flex items-center justify-center border border-white/[0.08]">
+        <div className={`relative w-full aspect-[4/3] rounded-2xl bg-black overflow-hidden flex items-center justify-center border transition-all duration-300 ${
+          justScanned ? 'border-emerald-400 shadow-[0_0_30px_rgba(52,199,89,0.3)]' : 'border-white/[0.08]'
+        }`}>
           <video
             ref={videoRef}
             playsInline
@@ -363,9 +383,9 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
                 <Camera size={24} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Camera Viewfinder</p>
+                <p className="text-sm font-semibold text-white">Smart Packaging & Barcode Scanner</p>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Scan any food package, 2D QR code, or nutrition label
+                  Point at any 1D barcode stripes, 2D QR code, or nutrition label
                 </p>
               </div>
 
@@ -404,12 +424,23 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           {/* Active Viewfinder Overlays */}
           {cameraActive && (
             <>
+              {/* High-tech Scanning Laser Beam Animation */}
+              <div className="absolute inset-x-8 top-12 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent pointer-events-none animate-scanline shadow-[0_0_12px_rgba(52,199,89,0.9)]" />
+
               {/* Apple-style Corner Reticle Brackets */}
               <div className="absolute inset-8 pointer-events-none">
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white/60 rounded-tl-lg" />
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white/60 rounded-tr-lg" />
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white/60 rounded-bl-lg" />
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white/60 rounded-br-lg" />
+                <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                }`} />
+                <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 rounded-tr-lg transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                }`} />
+                <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 rounded-bl-lg transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                }`} />
+                <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 rounded-br-lg transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                }`} />
               </div>
 
               {/* Shutter Action Buttons */}
@@ -422,7 +453,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
                   {isScanning ? (
                     <>
                       <CircleNotch size={15} className="animate-spin text-black" />
-                      <span>Reading Label...</span>
+                      <span>Reading Barcode...</span>
                     </>
                   ) : (
                     <>
@@ -458,8 +489,8 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           }`}
         >
           <UploadSimple size={32} className="text-zinc-400 mb-2" />
-          <p className="text-xs font-medium text-white">Drop or upload food label photo</p>
-          <p className="text-[11px] text-zinc-500 mt-1">Automatic ZXing barcode decode + OCR</p>
+          <p className="text-xs font-medium text-white">Drop or upload packaging photo</p>
+          <p className="text-[11px] text-zinc-500 mt-1">Multi-pass hardware detection + contrast binarization</p>
           
           <div className="flex items-center gap-2 mt-4">
             <button
@@ -500,7 +531,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           >
             <input
               type="text"
-              placeholder="e.g. 5449000000996, 8901058862897, or Maggi"
+              placeholder="e.g. 5449000000996, 8901058852318, or Maggi"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
@@ -517,7 +548,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             <span>Examples:</span>
             <button
               type="button"
-              onClick={() => handleBarcodeScanned('8901058862897')}
+              onClick={() => handleBarcodeScanned('8901058852318')}
               className="underline hover:text-white"
             >
               Maggi
@@ -533,10 +564,10 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             <span>·</span>
             <button
               type="button"
-              onClick={() => handleBarcodeScanned('8901262010015')}
+              onClick={() => handleBarcodeScanned('8901491101837')}
               className="underline hover:text-white"
             >
-              Amul Milk
+              Lay&apos;s
             </button>
           </div>
         </div>

@@ -116,3 +116,15 @@ input[type="range"]::-webkit-slider-thumb:active {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* Scanner HUD Laser Beam Animation */
+@keyframes scanline {
+  0% { transform: translateY(0%); opacity: 0; }
+  15% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { transform: translateY(260px); opacity: 0; }
+}
+
+.animate-scanline {
+  animation: scanline 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

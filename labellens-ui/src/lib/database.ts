@@ -4479,6 +4479,7 @@ export const EXHIBITION_PRODUCTS: ProductItem[] = [
   {
     "id": "prod_maggi",
     "barcode": "8901058852318",
+    "barcode_aliases": ["8901058862897", "8901058017687", "8901058849492", "8901058852898"],
     "qr_code_url": "https://id.gs1.org/01/08901058852318",
     "qr_payload": "{\"gtin\": \"08901058852318\", \"brand\": \"Nestle India\", \"name\": \"Maggi 2-Minute Masala Noodles\"}",
     "product_name": "Maggi 2-Minute Masala Noodles",
@@ -5430,7 +5431,11 @@ export function resolveQrOrBarcode(rawText: string): ProductItem | undefined {
     const unpadded = barcode.replace(/^0+/, '');
     const match = EXHIBITION_PRODUCTS.find((p) => {
       const pUnpadded = p.barcode.replace(/^0+/, '');
-      return p.barcode === barcode || pUnpadded === unpadded;
+      if (p.barcode === barcode || pUnpadded === unpadded) return true;
+      if (p.barcode_aliases && p.barcode_aliases.some((a) => a === barcode || a.replace(/^0+/, '') === unpadded)) {
+        return true;
+      }
+      return false;
     });
     if (match) return match;
   }
@@ -5643,11 +5648,16 @@ export async function lookupProductLive(codeOrQuery: string): Promise<ProductIte
   const barcode = extractBarcodeFromPayload(clean);
 
   if (barcode) {
-    // 2a. Check if local database matches unpadded barcode
+    // 2a. Check if local database matches unpadded barcode or alias
     const unpadded = barcode.replace(/^0+/, '');
-    const localBarcodeMatch = EXHIBITION_PRODUCTS.find(
-      (p) => p.barcode === barcode || p.barcode.replace(/^0+/, '') === unpadded
-    );
+    const localBarcodeMatch = EXHIBITION_PRODUCTS.find((p) => {
+      const pUnpadded = p.barcode.replace(/^0+/, '');
+      if (p.barcode === barcode || pUnpadded === unpadded) return true;
+      if (p.barcode_aliases && p.barcode_aliases.some((a) => a === barcode || a.replace(/^0+/, '') === unpadded)) {
+        return true;
+      }
+      return false;
+    });
     if (localBarcodeMatch) return localBarcodeMatch;
 
     // 2b. Query Open Food Facts global database

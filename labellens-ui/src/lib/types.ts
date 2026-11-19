@@ -72,6 +72,7 @@ export interface HealthierAlternative {
 export interface ProductItem {
   id: string;
   barcode: string;
+  barcode_aliases?: string[];
   qr_code_url?: string;
   qr_payload?: string;
   product_name: string;
