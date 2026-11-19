@@ -89,6 +89,8 @@ export interface ProductItem {
   is_veg?: boolean;
   fssai_license?: string;
   source_engine?: 'local' | 'openfoodfacts' | 'gs1_india' | 'ollama_vision';
+  is_food?: boolean;
+  non_food_reason?: string;
   healthier_alternatives?: HealthierAlternative[];
 }
 

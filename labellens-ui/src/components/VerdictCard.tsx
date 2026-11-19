@@ -66,6 +66,40 @@ export function VerdictCard({
   // Vegetarian Status
   const isVegetarian = product.is_veg !== false;
 
+  // Non-Food Item Scanned Guard
+  if (product.is_food === false) {
+    return (
+      <div className="w-full rounded-3xl apple-glass p-5 sm:p-7 space-y-4 border border-amber-500/30 bg-amber-500/[0.04] relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+            <WarningCircle size={28} weight="fill" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+              <span>Non-Food Item Scanned</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              {product.product_name}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-2xl">
+              LabelLens is designed to evaluate <strong>edible food and beverage products</strong>. This package was recognized as <strong>{product.category || 'a non-food item'}</strong>. Nutrition facts and Nutri-Scores are not applicable to non-edible products.
+            </p>
+            {product.non_food_reason && (
+              <p className="text-[11px] text-zinc-400 font-mono pt-1">
+                Notice: {product.non_food_reason}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+          <span>Tip: Please scan an edible food item (e.g. noodles, biscuits, juices, chocolates, chips, or millets).</span>
+          <span className="text-[11px] font-mono text-zinc-500">Barcode: {product.barcode}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 relative overflow-hidden">
       

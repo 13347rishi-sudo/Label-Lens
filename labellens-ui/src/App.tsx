@@ -15,9 +15,9 @@ import { analyzeIngredients } from './lib/knowledge';
 import { applyHealthProfile, HEALTH_PROFILES } from './lib/profiles';
 import { playAlertBuzzer } from './lib/sound';
 import type { HealthProfileId, ProductItem, Per100g } from './lib/types';
-import { Camera, Flask, Sliders, Scales } from '@phosphor-icons/react';
+import { Camera, Scales } from '@phosphor-icons/react';
 
-type TabType = 'overview' | 'ingredients' | 'reformulate' | 'duel';
+type TabType = 'overview' | 'duel';
 
 export function App() {
   const [selectedModel, setSelectedModel] = useState<string>('qwen3.5:2b');
@@ -76,48 +76,24 @@ export function App() {
       {/* Main Content Container with Macro-Whitespace */}
       <main className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-7">
         
-        {/* Apple Style Segmented View Switcher - Horizontally scrollable on mobile */}
-        <div className="w-full flex items-center justify-start sm:justify-center overflow-x-auto scrollbar-none py-1 px-1">
-          <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.07] shadow-sm shrink-0 whitespace-nowrap">
+        {/* Apple Style Segmented View Switcher */}
+        <div className="w-full flex items-center justify-center py-1 px-1">
+          <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.07] shadow-sm">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] ${
                 activeTab === 'overview'
                   ? 'bg-white text-black shadow-sm font-semibold'
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
               }`}
             >
               <Camera size={15} />
-              <span>Scan & Results</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ingredients')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] shrink-0 ${
-                activeTab === 'ingredients'
-                  ? 'bg-white text-black shadow-sm font-semibold'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
-              }`}
-            >
-              <Flask size={15} />
-              <span>Ingredients & Additives</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('reformulate')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] shrink-0 ${
-                activeTab === 'reformulate'
-                  ? 'bg-white text-black shadow-sm font-semibold'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
-              }`}
-            >
-              <Sliders size={15} />
-              <span>Adjust Recipe</span>
+              <span>Scan & Health Analysis</span>
             </button>
 
             <button
               onClick={() => setActiveTab('duel')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all active:scale-95 min-h-[40px] ${
                 activeTab === 'duel'
                   ? 'bg-white text-black shadow-sm font-semibold'
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
@@ -160,7 +136,7 @@ export function App() {
               </div>
             </div>
 
-            {/* Verdict Card (Official European Nutri-Score) */}
+            {/* Verdict Card (Official European Nutri-Score OR Non-Food Warning) */}
             <VerdictCard
               product={currentProduct}
               scoringResult={scoringResult}
@@ -168,79 +144,36 @@ export function App() {
               activeProfileName={activeProfileData.name}
             />
 
-            {/* Healthier Alternatives & Natural Swaps Card */}
-            <HealthierAlternativesCard
-              product={currentProduct}
-              onSelectProduct={handleSelectProduct}
-            />
+            {/* If Edible Food: show Swaps, Ingredients & Additives Breakdown, and Nutrition Grid */}
+            {currentProduct.is_food !== false && (
+              <>
+                {/* Healthier Alternatives & Natural Swaps Card */}
+                <HealthierAlternativesCard
+                  key={`swaps-${currentProduct.id}`}
+                  product={currentProduct}
+                  onSelectProduct={handleSelectProduct}
+                />
 
-            {/* Nutritional Facts Grid */}
-            <InteractiveBentoGrid
-              key={currentProduct.id}
-              initialNutrition={currentProduct.per_100g}
-              isBeverage={currentProduct.is_beverage}
-              onNutritionChange={setLiveNutrition}
-            />
+                {/* Ingredients & Chemical Additives Breakdown */}
+                <ChemicalInspector
+                  ingredients={currentProduct.ingredients}
+                  knowledge={knowledgeResult}
+                />
+
+                {/* Nutritional Facts Grid (includes recipe reformulation sliders) */}
+                <InteractiveBentoGrid
+                  key={currentProduct.id}
+                  initialNutrition={currentProduct.per_100g}
+                  isBeverage={currentProduct.is_beverage}
+                  onNutritionChange={setLiveNutrition}
+                />
+              </>
+            )}
 
           </div>
         )}
 
-        {/* Tab 2: Ingredients & Chemical Intelligence */}
-        {activeTab === 'ingredients' && (
-          <div className="space-y-8 animate-fadeIn">
-            <VerdictCard
-              product={currentProduct}
-              scoringResult={scoringResult}
-              profileAdjustment={profileAdjustment}
-              activeProfileName={activeProfileData.name}
-            />
-
-            <ChemicalInspector
-              ingredients={currentProduct.ingredients}
-              knowledge={knowledgeResult}
-            />
-
-            <HealthierAlternativesCard
-              product={currentProduct}
-              onSelectProduct={handleSelectProduct}
-            />
-          </div>
-        )}
-
-        {/* Tab 3: Interactive Reformulation Sandbox */}
-        {activeTab === 'reformulate' && (
-          <div className="space-y-8 animate-fadeIn">
-            <div className="text-center max-w-xl mx-auto space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-white">
-                Food Industry Reformulation Sandbox
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Adjust key nutrients below to test how recipe changes immediately elevate or penalize the European Nutri-Score.
-              </p>
-            </div>
-
-            <VerdictCard
-              product={currentProduct}
-              scoringResult={scoringResult}
-              profileAdjustment={profileAdjustment}
-              activeProfileName={activeProfileData.name}
-            />
-
-            <InteractiveBentoGrid
-              key={`reform-${currentProduct.id}`}
-              initialNutrition={currentProduct.per_100g}
-              isBeverage={currentProduct.is_beverage}
-              onNutritionChange={setLiveNutrition}
-            />
-
-            <HealthierAlternativesCard
-              product={currentProduct}
-              onSelectProduct={handleSelectProduct}
-            />
-          </div>
-        )}
-
-        {/* Tab 4: Side-by-Side Product Duel */}
+        {/* Tab 2: Side-by-Side Product Duel */}
         {activeTab === 'duel' && (
           <div className="animate-fadeIn">
             <ComparisonArena />

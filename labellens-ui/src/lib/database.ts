@@ -1,5 +1,7 @@
 import type { ProductItem, HealthierAlternative } from './types';
 import { resolveGs1IndiaBarcode } from './indianFmcg';
+import { getContextualAlternatives } from './alternativesEngine';
+import { checkIsNonFood } from './foodClassifier';
 
 export const EXHIBITION_PRODUCTS: ProductItem[] = [
   {
@@ -5454,112 +5456,11 @@ export function findProductById(id: string): ProductItem | undefined {
 
 /**
  * Returns tailored healthier alternatives (both packaged and whole natural foods).
- * If the product has explicit alternatives, returns those. Otherwise generates smart swaps dynamically.
+ * Generates specific, contextual swaps for each food category (noodles, biscuits,
+ * chips, sodas, chocolates, dairy, breads, etc.).
  */
 export function getHealthierAlternatives(product: ProductItem): HealthierAlternative[] {
-  if (product.healthier_alternatives && product.healthier_alternatives.length > 0) {
-    return product.healthier_alternatives;
-  }
-
-  const category = (product.category || '').toLowerCase();
-  const sugars = product.per_100g?.sugars_g ?? 0;
-  const isBeverage = product.is_beverage;
-
-  const swaps: HealthierAlternative[] = [];
-
-  if (isBeverage || category.includes('drink') || category.includes('juice') || category.includes('soda')) {
-    swaps.push({
-      name: 'Tender Coconut Water',
-      category: 'natural',
-      nutri_grade: 'A',
-      reason: 'Natural potassium-rich hydration with zero added cane sugar or phosphoric acid',
-      savings: '-75% sugar load',
-      target_id: 'prod_raw_coconut'
-    });
-    swaps.push({
-      name: 'Spiced Buttermilk (Chaas)',
-      brand: 'Amul',
-      category: 'packaged',
-      nutri_grade: 'A',
-      reason: 'Active probiotic digestive drink with high electrolytes',
-      savings: 'Zero added sugar, 3g protein',
-      target_id: 'prod_amul_chaas'
-    });
-  } else if (category.includes('snack') || category.includes('chip') || category.includes('crisp')) {
-    swaps.push({
-      name: 'Roasted Fox Nuts (Makhana)',
-      brand: 'Farmley',
-      category: 'packaged',
-      nutri_grade: 'A',
-      reason: 'High protein water lily seeds roasted in olive oil with zero palm fat',
-      savings: '-80% saturated fat',
-      target_id: 'prod_farmley_makhana'
-    });
-    swaps.push({
-      name: 'Roasted Bengal Gram (Chana)',
-      category: 'natural',
-      nutri_grade: 'A',
-      reason: 'Whole roasted legumes packed with 21g plant protein and insoluble fiber',
-      savings: 'No palm oil, 21g protein',
-      target_id: 'prod_natureland_chana'
-    });
-  } else if (category.includes('cereal') || category.includes('breakfast')) {
-    swaps.push({
-      name: 'Rolled White Oats',
-      brand: 'Quaker',
-      category: 'packaged',
-      nutri_grade: 'A',
-      reason: '100% whole grain with beta-glucan soluble fiber that lowers cholesterol',
-      savings: 'Zero added sugar, 10.6g fiber',
-      target_id: 'prod_oats'
-    });
-    swaps.push({
-      name: 'Foxtail Millet Grain',
-      category: 'natural',
-      nutri_grade: 'A',
-      reason: 'Ancient low-glycemic grain naturally rich in minerals and B vitamins',
-      savings: 'Lowest GI, gluten-free',
-      target_id: 'prod_foxtail_millet'
-    });
-  } else if (category.includes('confectionery') || category.includes('sweet') || sugars > 25) {
-    swaps.push({
-      name: '100% Pure Peanut Butter',
-      brand: 'Pintola',
-      category: 'packaged',
-      nutri_grade: 'A',
-      reason: 'Single ingredient roasted peanuts with zero palm oil or corn syrup',
-      savings: 'Zero added cane sugar, 30g protein',
-      target_id: 'prod_pintola_pb'
-    });
-    swaps.push({
-      name: 'Raw California Walnuts',
-      category: 'natural',
-      nutri_grade: 'A',
-      reason: 'Dense in heart-protective Omega-3 alpha-linolenic acid (ALA)',
-      savings: 'Zero sugar spikes',
-      target_id: 'prod_raw_walnuts'
-    });
-  } else {
-    swaps.push({
-      name: 'Sprouted Green Moong Dal',
-      category: 'natural',
-      nutri_grade: 'A',
-      reason: 'Fresh bioavailable enzymes, high protein, and low calorie density',
-      savings: '100% natural whole food',
-      target_id: 'prod_moong_dal'
-    });
-    swaps.push({
-      name: 'Rolled White Oats',
-      brand: 'Quaker',
-      category: 'packaged',
-      nutri_grade: 'A',
-      reason: 'Heart-healthy dietary fiber benchmark',
-      savings: 'Low saturated fat',
-      target_id: 'prod_oats'
-    });
-  }
-
-  return swaps;
+  return getContextualAlternatives(product);
 }
 
 /**
@@ -5633,6 +5534,12 @@ function parseOffProduct(p: any, fallbackBarcode: string): ProductItem {
     allergens_stated: allergens
   };
 
+  const isNonFood = checkIsNonFood(liveItem.product_name, liveItem.category, liveItem.brand, liveItem.ingredients);
+  if (!isNonFood.isFood) {
+    liveItem.is_food = false;
+    liveItem.non_food_reason = isNonFood.reason;
+  }
+
   liveItem.healthier_alternatives = getHealthierAlternatives(liveItem);
   return liveItem;
 }
@@ -5647,6 +5554,40 @@ function parseOffProduct(p: any, fallbackBarcode: string): ProductItem {
 export async function lookupProductLive(codeOrQuery: string): Promise<ProductItem | undefined> {
   if (!codeOrQuery) return undefined;
   const clean = codeOrQuery.trim();
+
+  // 0. Immediate non-food keyword pre-check (e.g. user typed "Dettol", "Colgate", "Shampoo", "Pencil", "Battery")
+  const directNonFoodCheck = checkIsNonFood(clean);
+  if (!directNonFoodCheck.isFood) {
+    return {
+      id: `nonfood_${Date.now()}`,
+      barcode: 'NON-FOOD',
+      product_name: clean,
+      brand: 'Non-Food Item',
+      category: directNonFoodCheck.itemType || 'Non-Food Product',
+      serving_size: 'N/A',
+      is_beverage: false,
+      is_veg: true,
+      fruit_veg_pct: 0,
+      description: directNonFoodCheck.reason || 'This product is not an edible food item.',
+      is_food: false,
+      non_food_reason: directNonFoodCheck.reason,
+      source_engine: 'local',
+      per_100g: {
+        energy_kcal: 0,
+        energy_kj: 0,
+        sugars_g: 0,
+        saturated_fat_g: 0,
+        salt_g: 0,
+        sodium_mg: 0,
+        fibre_g: 0,
+        protein_g: 0,
+        fat_g: 0,
+        carbs_g: 0
+      },
+      ingredients: ['Non-edible substance or hardware item'],
+      allergens_stated: []
+    };
+  }
 
   // 1. Try local offline database first (exact barcode or official QR URL)
   const localMatch = resolveQrOrBarcode(clean);
@@ -5716,6 +5657,11 @@ export async function lookupProductLive(codeOrQuery: string): Promise<ProductIte
       const targetBc = barcode.startsWith('890') ? barcode : unpadded;
       const gs1Match = resolveGs1IndiaBarcode(targetBc);
       if (gs1Match) {
+        const gs1NonFood = checkIsNonFood(gs1Match.product_name, gs1Match.category, gs1Match.brand, gs1Match.ingredients);
+        if (!gs1NonFood.isFood) {
+          gs1Match.is_food = false;
+          gs1Match.non_food_reason = gs1NonFood.reason;
+        }
         gs1Match.healthier_alternatives = getHealthierAlternatives(gs1Match);
         return gs1Match;
       }

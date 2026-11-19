@@ -11,7 +11,7 @@ export function ChemicalInspector({ ingredients, knowledge }: ChemicalInspectorP
   const [activeTab, setActiveTab] = useState<'all' | 'sugars' | 'palm' | 'allergens' | 'additives'>('all');
 
   return (
-    <div className="w-full rounded-3xl apple-glass p-6 md:p-8 space-y-6">
+    <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
       
       {/* Header & Apple Segmented Control */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

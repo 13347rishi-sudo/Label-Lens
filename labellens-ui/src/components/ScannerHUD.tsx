@@ -113,8 +113,13 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
     try {
       const product = await lookupProductLive(code);
       if (product) {
-        playSuccessChime();
-        setScanStatus(`Found: ${product.product_name} (${product.brand})`);
+        if (product.is_food === false) {
+          playAlertBuzzer();
+          setScanStatus(`⚠️ Scanned a non-food item (${product.product_name}). Please scan an edible food package.`);
+        } else {
+          playSuccessChime();
+          setScanStatus(`Found: ${product.product_name} (${product.brand})`);
+        }
         onProductResolved(product);
       } else {
         playAlertBuzzer();

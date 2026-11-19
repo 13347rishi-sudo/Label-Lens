@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
-import { Sparkle, Package, Plant, ArrowRight, CheckCircle, ShieldCheck } from '@phosphor-icons/react';
+import { useState, useMemo } from 'react';
+import { Sparkle, Package, Plant, ArrowRight, CheckCircle, ShieldCheck, CircleNotch, Brain } from '@phosphor-icons/react';
 import type { ProductItem, HealthierAlternative } from '../lib/types';
 import { getHealthierAlternatives, findProductById } from '../lib/database';
+import { generateAiSwapsWithOllama } from '../lib/alternativesEngine';
 import { getGradeColor } from '../lib/scoring';
-import { playSuccessChime, playBarcodeBeep } from '../lib/sound';
+import { playSuccessChime, playBarcodeBeep, playAlertBuzzer } from '../lib/sound';
 
 interface HealthierAlternativesCardProps {
   product: ProductItem;
@@ -14,9 +15,13 @@ export function HealthierAlternativesCard({
   product,
   onSelectProduct
 }: HealthierAlternativesCardProps) {
+  const [customAiSwaps, setCustomAiSwaps] = useState<HealthierAlternative[] | null>(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const alternatives = useMemo(() => {
-    return getHealthierAlternatives(product);
-  }, [product]);
+    return customAiSwaps || getHealthierAlternatives(product);
+  }, [product, customAiSwaps]);
 
   const packagedSwaps = useMemo(
     () => alternatives.filter((a) => a.category === 'packaged'),
@@ -41,6 +46,29 @@ export function HealthierAlternativesCard({
     }
   };
 
+  const handleGenerateAiSwaps = async () => {
+    setIsGeneratingAi(true);
+    setAiError(null);
+    try {
+      const aiResults = await generateAiSwapsWithOllama(product);
+      if (aiResults && aiResults.length > 0) {
+        playSuccessChime();
+        setCustomAiSwaps(aiResults);
+      } else {
+        throw new Error('No alternatives returned.');
+      }
+    } catch {
+      playAlertBuzzer();
+      setAiError('Unable to generate AI swaps right now. Showing benchmark swaps.');
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  if (product.is_food === false) {
+    return null;
+  }
+
   return (
     <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-7 space-y-5 sm:space-y-6">
       
@@ -56,7 +84,7 @@ export function HealthierAlternativesCard({
                 Healthier Alternatives
               </h3>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
-                Grade A / B
+                {customAiSwaps ? 'AI Tailored' : 'Grade A / B'}
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
@@ -65,11 +93,40 @@ export function HealthierAlternativesCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-zinc-400 self-start sm:self-auto">
-          <ShieldCheck size={16} className="text-emerald-400" />
-          <span>Less sugar & fat · More fiber & protein</span>
+        {/* Header Right: AI Swaps Button & Info */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleGenerateAiSwaps}
+            disabled={isGeneratingAi}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 min-h-[36px]"
+            title="Ask local AI model to generate custom swaps for this exact product"
+          >
+            {isGeneratingAi ? (
+              <>
+                <CircleNotch size={14} className="animate-spin text-emerald-400" />
+                <span>Thinking with AI...</span>
+              </>
+            ) : (
+              <>
+                <Brain size={14} weight="fill" className="text-emerald-400" />
+                <span>Ask AI for Swaps</span>
+              </>
+            )}
+          </button>
+
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400">
+            <ShieldCheck size={16} className="text-emerald-400" />
+            <span>Less sugar & fat</span>
+          </div>
         </div>
       </div>
+
+      {aiError && (
+        <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200">
+          {aiError}
+        </div>
+      )}
 
       {/* Grid: Packaged Swaps & Natural Whole Food Swaps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

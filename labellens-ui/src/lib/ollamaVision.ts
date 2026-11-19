@@ -1,5 +1,6 @@
 import type { ProductItem } from './types';
 import { getHealthierAlternatives } from './database';
+import { checkIsNonFood } from './foodClassifier';
 
 /**
  * High-speed client-side image resizer.
@@ -211,6 +212,12 @@ Respond ONLY with a valid JSON object matching this schema:
       : ['Cereal Grains', 'Edible Vegetable Oil', 'Seasoning & Condiments', 'Permitted Flavours'],
     allergens_stated: Array.isArray(parsed.allergens) ? parsed.allergens : []
   };
+
+  const nonFoodCheck = checkIsNonFood(productName, parsed.category || '', brand, productItem.ingredients);
+  if (!nonFoodCheck.isFood) {
+    productItem.is_food = false;
+    productItem.non_food_reason = nonFoodCheck.reason;
+  }
 
   // Generate healthier alternatives
   productItem.healthier_alternatives = getHealthierAlternatives(productItem);
