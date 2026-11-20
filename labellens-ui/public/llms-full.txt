@@ -1,0 +1,147 @@
+# LabelLens: Full Technical Specification & Knowledge Base
+
+> Comprehensive reference document for LLMs, autonomous agents, and AI researchers analyzing the LabelLens Nutritional Intelligence System.
+
+---
+
+## 1. Official European Nutri-Score 2.0 Mathematical Specification
+
+The Nutri-Score calculation is based on the updated 2023/2024 European Scientific Committee revision.
+
+### 1.1 General Food Algorithm
+
+The raw score is calculated as:
+$$\text{Raw Score} = N - P$$
+
+Where $N$ is the sum of unfavourable points (0 to 55 points) and $P$ is the sum of favourable points (0 to 17 points).
+
+#### Unfavourable Component ($N$ Points):
+$$N = N_{\text{energy}} + N_{\text{sugars}} + N_{\text{saturated\_fat}} + N_{\text{salt}}$$
+
+- **Energy ($kJ/100g$)**: Points 0 to 10 based on thresholds `[335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350]`.
+- **Sugars ($g/100g$)**: Points 0 to 15 based on thresholds `[3.4, 6.8, 10.0, 14.0, 17.0, 21.0, 24.0, 28.0, 31.0, 35.0, 39.0, 42.0, 46.0, 49.0, 53.0]`.
+- **Saturated Fatty Acids ($g/100g$)**: Points 0 to 10 based on thresholds `[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]`.
+- **Salt ($g/100g$)**: Points 0 to 20 based on thresholds `[0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]`. (Derived from sodium if missing: $\text{salt\_g} = \text{sodium\_mg} \times 0.0025$).
+
+#### Favourable Component ($P$ Points):
+$$P = P_{\text{fibre}} + P_{\text{protein\_effective}} + P_{\text{fruit\_veg}}$$
+
+- **Fibre ($g/100g$)**: Points 0 to 5 based on thresholds `[3.0, 4.1, 5.2, 6.3, 7.4]`.
+- **Protein ($g/100g$)**: Points 0 to 7 based on thresholds `[2.4, 4.8, 7.2, 9.6, 12.0, 14.0, 17.0]`.
+- **Fruits, Vegetables, Legumes, Nuts & Oils (%)**:
+  - $> 80\%$: 5 points
+  - $> 60\%$: 2 points
+  - $> 40\%$: 1 point
+  - $\le 40\%$: 0 points
+
+#### The Protein Capping Rule (Critical Nutri-Score Constraint):
+If $N \ge 11$ points, protein points are capped to $0$ ($P_{\text{protein\_effective}} = 0$), UNLESS the fruit and vegetable content is $> 80\%$ ($P_{\text{fruit\_veg}} = 5$). This prevents unhealthy junk foods with added isolated protein from gaming the system into a high health grade.
+
+#### Final Grade Mapping (General Foods):
+| Raw Score Range | Nutri-Score Grade | Visual Badge | Classification |
+|---|---|---|---|
+| Raw Score $\le -1$ | **A** | Dark Green | Optimal nutritional quality |
+| $0 \le \text{Raw Score} \le 2$ | **B** | Light Green | Good nutritional quality |
+| $3 \le \text{Raw Score} \le 10$ | **C** | Yellow | Average nutritional quality |
+| $11 \le \text{Raw Score} \le 18$ | **D** | Orange | Poor nutritional quality |
+| Raw Score $\ge 19$ | **E** | Red | Very poor / highly processed |
+
+---
+
+### 1.2 Beverage Algorithm
+
+Beverages follow distinct, significantly stricter thresholds:
+- **Water**: The only beverage entitled to automatic **Grade A**.
+- **Energy ($kJ/100ml$)**: Thresholds `[30, 60, 90, 120, 150, 180, 210, 240, 270, 300]`.
+- **Sugars ($g/100ml$)**: Stricter thresholds `[0, 1.5, 3.0, 4.5, 6.0, 7.5, 9.0, 10.5, 12.0, 13.5]`.
+- **Grade Cutoffs for Beverages**:
+  - Pure Water $\rightarrow$ **A**
+  - Raw Score $\le 2$ $\rightarrow$ **B**
+  - $3 \le \text{Raw Score} \le 6$ $\rightarrow$ **C**
+  - $7 \le \text{Raw Score} \le 9$ $\rightarrow$ **D**
+  - Raw Score $\ge 10$ $\rightarrow$ **E**
+
+---
+
+## 2. Ingredient Intelligence Knowledge Graph
+
+### 2.1 Hidden Sugar Aliases (50+ Monitored Terms)
+Food manufacturers routinely split sugar into multiple scientific or derivative terms to push "Sugar" further down the ingredient list. LabelLens monitors:
+- *Simple sugars*: glucose, fructose, dextrose, galactose, sucrose, lactose, ribose.
+- *Syrups*: high-fructose corn syrup (HFCS), glucose syrup, corn syrup, corn syrup solids, invert sugar, invert syrup, golden syrup, maple syrup, agave syrup, agave nectar, rice syrup, brown rice syrup, tapioca syrup, date syrup, sorghum syrup, refiner's syrup.
+- *Unrefined/Alternative sweeteners*: panela, rapadura, sucanat, turbinado, muscovado, coconut sugar, date sugar, beet sugar, cane sugar, cane juice, cane crystals, dehydrated cane juice, evaporated cane juice.
+- *Extracts & Concentrates*: barley malt, barley malt extract, malt syrup, malt extract, maltodextrin, fruit juice concentrate (apple, grape, pear juice concentrates).
+- *Sugar Alcohols / Polyols*: sorbitol, mannitol, xylitol, erythritol, polydextrose, isomaltulose.
+
+### 2.2 Palm Oil Derivatives
+Tracked terms: `palm oil`, `palm fat`, `palm kernel oil`, `palm kernel fat`, `palmitate`, `sodium palmitate`, `vegetable fat (palm)`, `vegetable oil (palm)`, `hydrogenated palm oil`, `partially hydrogenated palm oil`, `fractionated palm oil`, `refined palm oil`, `palm stearin`, `palm olein`, `palm mid-fraction`, `palm superolein`, `RBD palm oil`, `CSPO`.
+
+### 2.3 The 14 European Major Allergens
+According to EU Regulation No 1169/2011, manufacturers must declare:
+1. **Gluten**: Wheat, rye, barley, oats, spelt, kamut, triticale, semolina, durum wheat.
+2. **Crustaceans**: Crab, lobster, prawns, shrimps, crayfish, krill, scampi.
+3. **Eggs**: Egg white, yolk, albumen, ovalbumin, lysozyme, mayonnaise.
+4. **Fish**: Fish gelatin, anchovy, cod, salmon, tuna, fish stock/sauce.
+5. **Peanuts**: Groundnuts, arachis oil, peanut butter/flour.
+6. **Soybeans**: Soya, edamame, tofu, soy lecithin, soy sauce, tempeh.
+7. **Milk**: Lactose, whey, casein, butter, cheese, cream, curd, ghee.
+8. **Tree Nuts**: Almonds, hazelnuts, walnuts, cashews, pecans, Brazil nuts, pistachios, macadamia.
+9. **Celery**: Celeriac, celery stalks, celery leaves, celery salt/seeds.
+10. **Mustard**: Mustard powder, liquid mustard, mustard seed.
+11. **Sesame**: Sesame oil, tahini, sesame seeds.
+12. **Sulphur Dioxide & Sulphites**: Concentration $> 10 mg/kg$ or $10 mg/L$ (E220 - E228).
+13. **Lupin**: Lupin flour, lupin seeds.
+14. **Molluscs**: Clams, mussels, squid, octopus, snails, oysters.
+
+### 2.4 EFSA Additives & E-Number Toxicity Classification
+- **High Concern**:
+  - `E102` Tartrazine, `E104` Quinoline Yellow, `E110` Sunset Yellow, `E122` Carmoisine, `E124` Ponceau 4R, `E129` Allura Red (The Southampton Six: pediatric hyperactivity).
+  - `E211` Sodium Benzoate (forms carcinogenic benzene in the presence of ascorbic acid / Vitamin C).
+  - `E249` Potassium Nitrite, `E250` Sodium Nitrite, `E251` Sodium Nitrate (linked to colorectal nitrosamine formation).
+  - `E621` Monosodium Glutamate (MSG).
+  - `E951` Aspartame, `E952` Cyclamate, `E954` Saccharin.
+- **Medium Concern**:
+  - `E120` Cochineal (insect-derived red dye, allergen risk).
+  - `E202` Potassium Sorbate, `E220` Sulphur Dioxide.
+  - `E319` TBHQ, `E320` BHA, `E321` BHT (synthetic antioxidants).
+  - `E407` Carrageenan (gut mucosal inflammation and permeability concerns).
+  - `E471` Mono- and diglycerides (may contain covert trans-fat isomers).
+  - `E950` Acesulfame K, `E955` Sucralose.
+- **Low Concern**:
+  - `E300` Ascorbic Acid (Vitamin C), `E306` Tocopherol (Vitamin E), `E322` Sunflower Lecithin, `E330` Citric Acid, `E410` Locust Bean Gum, `E440` Pectin.
+
+---
+
+## 3. Personalized Health Profiles Logic
+
+1. **General Adult**: Default baseline Nutri-Score calculation.
+2. **Diabetic / Pre-diabetic**:
+   - Condition: Sugars $> 5g / 100g$.
+   - Penalty: Score downgraded by 2 points.
+   - Alert: Flags rapid blood glucose spiking risk and warns about maltodextrin (glycemic index 110-185, higher than pure table sugar).
+3. **Severe Nut Allergy**:
+   - Condition: Detection of peanuts or tree nuts in ingredients or stated allergens.
+   - Alert: Immediate critical red banner: **CRITICAL ALLERGEN WARNING: DO NOT CONSUME**.
+4. **Child (Under 10)**:
+   - Condition: Synthetic azo dyes (E102, E110, E122, E124, E129) or high caffeine / sugar content.
+   - Penalty: Score downgraded; flags pediatric hyperactivity warnings under EU regulations.
+5. **High Blood Pressure (Hypertension)**:
+   - Condition: Salt $> 1.25g / 100g$ (Sodium $> 500mg / 100g$).
+   - Penalty: Score downgraded by 2 points; flags vascular strain and fluid retention risks.
+
+---
+
+## 4. Benchmark Foods Dataset Sample (115+ Items)
+
+| Product Name | Category | Grade | Calories ($kcal$) | Sugars ($g$) | Salt ($g$) | Key Ingredient Flags |
+|---|---|---|---|---|---|---|
+| **Coca-Cola Classic** | Beverage | **E** | 42 | 10.6 | 0.00 | Sugar, Caramel E150d, Phosphoric Acid |
+| **Pepsi Zero Sugar** | Beverage | **B** | 0 | 0.0 | 0.03 | Aspartame (E951), Acesulfame K (E950) |
+| **Tender Coconut Water** | Natural Beverage | **A** | 19 | 3.7 | 0.05 | 100% Raw Coconut Water (Natural Isotonic) |
+| **Amul Spiced Buttermilk** | Dairy Beverage | **A** | 29 | 1.8 | 0.50 | Cultured Curd, Rock Salt, Cumin (Probiotic) |
+| **Maggi 2-Minute Noodles** | Instant Meals | **E** | 427 | 3.2 | 2.80 | Palm Oil, Wheat Flour, Flavour Enhancer (E635) |
+| **Foxtail Millet Noodles** | Healthy Meal | **A** | 350 | 1.0 | 0.40 | Whole Foxtail Millet, Zero Palm Oil, Sun-dried |
+| **Doritos Cheese Supreme** | Savory Snacks | **E** | 503 | 2.5 | 1.60 | Palm Olein, Maltodextrin, MSG (E621), Tartrazine (E102) |
+| **Roasted Makhana (Foxnuts)**| Natural Snack | **A** | 347 | 0.2 | 0.30 | Foxnuts, Cold-pressed Olive Oil, Rock Salt |
+| **Cadbury Dairy Milk** | Confectionery | **E** | 534 | 57.0 | 0.35 | 57% Free Sugar, Cocoa Butter, Emulsifier (E476) |
+| **Dark Chocolate (85%)** | Confectionery | **B** | 584 | 14.0 | 0.08 | High Polyphenols, 15g Fibre, Low Sugar |

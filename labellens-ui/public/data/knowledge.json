@@ -1,0 +1,955 @@
+{
+  "hidden_sugars_count": 64,
+  "hidden_sugars": [
+    "maltodextrin",
+    "dextrose",
+    "fructose",
+    "glucose",
+    "glucose syrup",
+    "high-fructose corn syrup",
+    "high fructose corn syrup",
+    "corn syrup",
+    "corn syrup solids",
+    "sucrose",
+    "invert sugar",
+    "invert syrup",
+    "cane sugar",
+    "cane juice",
+    "dried cane juice",
+    "beet sugar",
+    "brown sugar",
+    "raw sugar",
+    "turbinado",
+    "muscovado",
+    "coconut sugar",
+    "agave",
+    "agave nectar",
+    "agave syrup",
+    "maple syrup",
+    "honey",
+    "molasses",
+    "treacle",
+    "barley malt",
+    "barley malt extract",
+    "malt syrup",
+    "malt extract",
+    "rice syrup",
+    "brown rice syrup",
+    "tapioca syrup",
+    "date syrup",
+    "date sugar",
+    "fruit juice concentrate",
+    "apple juice concentrate",
+    "grape juice concentrate",
+    "pear juice concentrate",
+    "dextrin",
+    "polydextrose",
+    "sorbitol",
+    "mannitol",
+    "xylitol",
+    "erythritol",
+    "lactose",
+    "galactose",
+    "ribose",
+    "isomaltulose",
+    "panela",
+    "rapadura",
+    "sucanat",
+    "dehydrated cane juice",
+    "evaporated cane juice",
+    "crystallized fructose",
+    "crystalized fructose",
+    "fruit sugar",
+    "golden syrup",
+    "refiner's syrup",
+    "sorghum syrup",
+    "sweet sorghum",
+    "cane crystals"
+  ],
+  "palm_oil_aliases_count": 20,
+  "palm_oil_aliases": [
+    "palm oil",
+    "palm fat",
+    "palm kernel oil",
+    "palm kernel fat",
+    "palmitate",
+    "sodium palmitate",
+    "vegetable fat (palm)",
+    "vegetable oil (palm)",
+    "hydrogenated palm oil",
+    "partially hydrogenated palm oil",
+    "fractionated palm oil",
+    "refined palm oil",
+    "palm stearin",
+    "palm olein",
+    "palm mid-fraction",
+    "palm superolein",
+    "RBD palm oil",
+    "CSPO",
+    "palm kernel stearin",
+    "palm kernel olein"
+  ],
+  "eu_allergens_count": 14,
+  "eu_allergens": {
+    "gluten": {
+      "label": "Gluten",
+      "eu_number": 1,
+      "synonyms": [
+        "wheat",
+        "wheat flour",
+        "wheat starch",
+        "wheat protein",
+        "wheat gluten",
+        "barley",
+        "barley malt",
+        "barley extract",
+        "barley flour",
+        "rye",
+        "rye flour",
+        "rye bread",
+        "oats",
+        "oat flour",
+        "oat bran",
+        "spelt",
+        "spelt flour",
+        "kamut",
+        "khorasan wheat",
+        "triticum",
+        "hordeum",
+        "secale",
+        "avena sativa",
+        "semolina",
+        "durum wheat",
+        "einkorn",
+        "emmer",
+        "bulgur",
+        "farro",
+        "freekeh",
+        "triticale",
+        "gluten",
+        "vital wheat gluten"
+      ]
+    },
+    "crustaceans": {
+      "label": "Crustaceans",
+      "eu_number": 2,
+      "synonyms": [
+        "crab",
+        "crab meat",
+        "crabmeat",
+        "lobster",
+        "lobster meat",
+        "shrimp",
+        "shrimps",
+        "prawns",
+        "prawn",
+        "crayfish",
+        "crawfish",
+        "langoustine",
+        "langoustines",
+        "barnacle",
+        "krill",
+        "crustacean",
+        "crustaceans",
+        "scampi"
+      ]
+    },
+    "eggs": {
+      "label": "Eggs",
+      "eu_number": 3,
+      "synonyms": [
+        "egg",
+        "eggs",
+        "dried egg",
+        "powdered egg",
+        "egg white",
+        "egg whites",
+        "egg yolk",
+        "egg yolks",
+        "albumen",
+        "egg albumen",
+        "ovalbumin",
+        "ovomucin",
+        "lysozyme",
+        "egg lecithin",
+        "mayonnaise",
+        "meringue",
+        "globulin",
+        "livetin",
+        "ovomucoid",
+        "ovovitellin",
+        "silici albuminate"
+      ]
+    },
+    "fish": {
+      "label": "Fish",
+      "eu_number": 4,
+      "synonyms": [
+        "fish",
+        "fish sauce",
+        "fish stock",
+        "fish oil",
+        "fish gelatin",
+        "anchovy",
+        "anchovies",
+        "bass",
+        "bream",
+        "carp",
+        "cod",
+        "dab",
+        "eel",
+        "flounder",
+        "grouper",
+        "haddock",
+        "hake",
+        "halibut",
+        "herring",
+        "mackerel",
+        "mahi-mahi",
+        "marlin",
+        "orange roughy",
+        "pangasius",
+        "perch",
+        "pike",
+        "pilchard",
+        "plaice",
+        "pollock",
+        "salmon",
+        "sardine",
+        "sardines",
+        "shark",
+        "skate",
+        "sole",
+        "sprat",
+        "swordfish",
+        "tilapia",
+        "trout",
+        "tuna",
+        "turbot",
+        "whitebait",
+        "whiting",
+        "caviar",
+        "roe",
+        "worcestershire sauce",
+        "caesar dressing"
+      ]
+    },
+    "peanuts": {
+      "label": "Peanuts",
+      "eu_number": 5,
+      "synonyms": [
+        "peanut",
+        "peanuts",
+        "groundnut",
+        "groundnuts",
+        "monkey nuts",
+        "arachis oil",
+        "peanut oil",
+        "peanut butter",
+        "peanut flour",
+        "peanut protein",
+        "mixed nuts",
+        "beer nuts"
+      ]
+    },
+    "soybeans": {
+      "label": "Soybeans",
+      "eu_number": 6,
+      "synonyms": [
+        "soya",
+        "soy",
+        "soybean",
+        "soybeans",
+        "edamame",
+        "tofu",
+        "tempeh",
+        "miso",
+        "soy sauce",
+        "tamari",
+        "textured soy protein",
+        "soy protein",
+        "soy flour",
+        "soy lecithin",
+        "textured vegetable protein",
+        "tvp",
+        "tsp",
+        "natto",
+        "yuba",
+        "okara",
+        "kinako",
+        "soy milk",
+        "soybean oil",
+        "soy isolate"
+      ]
+    },
+    "milk": {
+      "label": "Milk",
+      "eu_number": 7,
+      "synonyms": [
+        "milk",
+        "milk powder",
+        "skimmed milk",
+        "whole milk",
+        "lactose",
+        "whey",
+        "whey powder",
+        "whey protein",
+        "casein",
+        "caseinate",
+        "sodium caseinate",
+        "calcium caseinate",
+        "cream",
+        "butter",
+        "buttermilk",
+        "ghee",
+        "cheese",
+        "yoghurt",
+        "yogurt",
+        "curd",
+        "lactalbumin",
+        "lactoglobulin",
+        "lactulose",
+        "dairy",
+        "milk solids",
+        "milk fat",
+        "half-and-half",
+        "sour cream",
+        "kefir",
+        "quark",
+        "fromage frais",
+        "mascarpone",
+        "ricotta",
+        "rennet casein",
+        "hydrolised whey"
+      ]
+    },
+    "nuts": {
+      "label": "Nuts",
+      "eu_number": 8,
+      "synonyms": [
+        "almond",
+        "almonds",
+        "almond oil",
+        "almond flour",
+        "hazelnut",
+        "hazelnuts",
+        "hazelnut oil",
+        "walnut",
+        "walnuts",
+        "walnut oil",
+        "cashew",
+        "cashews",
+        "cashew nut",
+        "pecan",
+        "pecans",
+        "pistachio",
+        "pistachios",
+        "macadamia",
+        "macadamia nuts",
+        "macadamia nut",
+        "brazil nut",
+        "brazil nuts",
+        "pine nut",
+        "pine nuts",
+        "pignoli",
+        "nut",
+        "nuts",
+        "mixed nuts",
+        "tree nut",
+        "queensland nut",
+        "marzipan",
+        "praline",
+        "gianduja",
+        "nougat"
+      ]
+    },
+    "celery": {
+      "label": "Celery",
+      "eu_number": 9,
+      "synonyms": [
+        "celery",
+        "celery seed",
+        "celery salt",
+        "celery oil",
+        "celeriac",
+        "celery root",
+        "celery extract",
+        "celery leaf",
+        "celery stalk"
+      ]
+    },
+    "mustard": {
+      "label": "Mustard",
+      "eu_number": 10,
+      "synonyms": [
+        "mustard",
+        "mustard seeds",
+        "mustard seed",
+        "mustard flour",
+        "mustard oil",
+        "mustard leaves",
+        "mustard powder",
+        "mustard paste",
+        "yellow mustard",
+        "dijon mustard",
+        "wholegrain mustard",
+        "sinapis",
+        "brassica"
+      ]
+    },
+    "sesame": {
+      "label": "Sesame",
+      "eu_number": 11,
+      "synonyms": [
+        "sesame",
+        "sesame seeds",
+        "sesame oil",
+        "tahini",
+        "tahina",
+        "sesame paste",
+        "sesame flour",
+        "til",
+        "gingelly oil",
+        "benne",
+        "benniseed"
+      ]
+    },
+    "sulphites": {
+      "label": "Sulphites / Sulphur dioxide",
+      "eu_number": 12,
+      "synonyms": [
+        "sulphur dioxide",
+        "sulfur dioxide",
+        "sulphites",
+        "sulfites",
+        "SO2",
+        "E220",
+        "E221",
+        "E222",
+        "E223",
+        "E224",
+        "E225",
+        "E226",
+        "E227",
+        "E228",
+        "potassium bisulphite",
+        "sodium bisulphite",
+        "sodium metabisulphite",
+        "potassium metabisulphite",
+        "calcium sulphite",
+        "dried fruit",
+        "wine",
+        "vinegar"
+      ]
+    },
+    "lupin": {
+      "label": "Lupin",
+      "eu_number": 13,
+      "synonyms": [
+        "lupin",
+        "lupine",
+        "lupin flour",
+        "lupin seed",
+        "lupin protein",
+        "lupin bean",
+        "lupin extract"
+      ]
+    },
+    "molluscs": {
+      "label": "Molluscs",
+      "eu_number": 14,
+      "synonyms": [
+        "oyster",
+        "oysters",
+        "mussel",
+        "mussels",
+        "clam",
+        "clams",
+        "scallop",
+        "scallops",
+        "squid",
+        "calamari",
+        "octopus",
+        "abalone",
+        "periwinkle",
+        "snail",
+        "escargot",
+        "whelk",
+        "cuttlefish",
+        "mollusc",
+        "molluscs",
+        "shellfish"
+      ]
+    }
+  },
+  "efsa_additives": {
+    "HIGH_CONCERN": {
+      "E102": {
+        "name": "Tartrazine",
+        "description": "Yellow azo dye. Linked to hyperactivity in children. Banned in some countries.",
+        "also_known_as": [
+          "tartrazine",
+          "FD&C Yellow 5"
+        ]
+      },
+      "E104": {
+        "name": "Quinoline Yellow",
+        "description": "Synthetic yellow dye. May cause hyperactivity.",
+        "also_known_as": [
+          "quinoline yellow"
+        ]
+      },
+      "E110": {
+        "name": "Sunset Yellow FCF",
+        "description": "Orange azo dye. Linked to hyperactivity. Banned in some countries.",
+        "also_known_as": [
+          "sunset yellow",
+          "FD&C Yellow 6"
+        ]
+      },
+      "E122": {
+        "name": "Carmoisine",
+        "description": "Red azo dye. Linked to hyperactivity in children.",
+        "also_known_as": [
+          "carmoisine",
+          "azorubine"
+        ]
+      },
+      "E124": {
+        "name": "Ponceau 4R",
+        "description": "Red azo dye. Restricted in several countries. Linked to hyperactivity.",
+        "also_known_as": [
+          "ponceau 4R",
+          "cochineal red A"
+        ]
+      },
+      "E129": {
+        "name": "Allura Red AC",
+        "description": "Red dye. Banned in several countries. Linked to hyperactivity.",
+        "also_known_as": [
+          "allura red",
+          "FD&C Red 40"
+        ]
+      },
+      "E211": {
+        "name": "Sodium Benzoate",
+        "description": "Preservative. Can form carcinogenic benzene when combined with vitamin C.",
+        "also_known_as": [
+          "sodium benzoate",
+          "benzoate of soda"
+        ]
+      },
+      "E249": {
+        "name": "Potassium Nitrite",
+        "description": "Preservative in cured meats. Linked to cancer risk at high levels.",
+        "also_known_as": [
+          "potassium nitrite"
+        ]
+      },
+      "E250": {
+        "name": "Sodium Nitrite",
+        "description": "Preservative in cured meats. Linked to cancer risk. Restricted quantity.",
+        "also_known_as": [
+          "sodium nitrite"
+        ]
+      },
+      "E251": {
+        "name": "Sodium Nitrate",
+        "description": "Preservative. Converts to nitrite in body.",
+        "also_known_as": [
+          "sodium nitrate"
+        ]
+      },
+      "E621": {
+        "name": "Monosodium Glutamate",
+        "description": "Flavour enhancer. May cause reactions in sensitive individuals ('Chinese Restaurant Syndrome').",
+        "also_known_as": [
+          "MSG",
+          "monosodium glutamate",
+          "sodium glutamate"
+        ]
+      },
+      "E951": {
+        "name": "Aspartame",
+        "description": "Artificial sweetener. Controversial; PKU patients must avoid.",
+        "also_known_as": [
+          "aspartame",
+          "NutraSweet",
+          "Equal"
+        ]
+      },
+      "E952": {
+        "name": "Cyclamate",
+        "description": "Artificial sweetener. Banned in USA. Permitted in EU.",
+        "also_known_as": [
+          "cyclamate",
+          "sodium cyclamate"
+        ]
+      },
+      "E954": {
+        "name": "Saccharin",
+        "description": "Oldest artificial sweetener. Associated with cancer in animal studies.",
+        "also_known_as": [
+          "saccharin",
+          "saccharine"
+        ]
+      }
+    },
+    "MEDIUM_CONCERN": {
+      "E100": {
+        "name": "Curcumin",
+        "description": "Yellow colouring from turmeric. Generally safe.",
+        "also_known_as": [
+          "curcumin",
+          "turmeric colour"
+        ]
+      },
+      "E101": {
+        "name": "Riboflavin",
+        "description": "Vitamin B2 used as yellow colouring. Generally safe.",
+        "also_known_as": [
+          "riboflavin",
+          "vitamin B2"
+        ]
+      },
+      "E120": {
+        "name": "Cochineal",
+        "description": "Red dye from insects. Not vegan. May cause allergic reactions.",
+        "also_known_as": [
+          "cochineal",
+          "carmine",
+          "carminic acid",
+          "E120"
+        ]
+      },
+      "E123": {
+        "name": "Amaranth",
+        "description": "Red azo dye. Banned in USA, restricted elsewhere.",
+        "also_known_as": [
+          "amaranth dye",
+          "FD&C Red 2"
+        ]
+      },
+      "E131": {
+        "name": "Patent Blue V",
+        "description": "Blue synthetic dye.",
+        "also_known_as": [
+          "patent blue V",
+          "food blue 5"
+        ]
+      },
+      "E132": {
+        "name": "Indigo Carmine",
+        "description": "Blue synthetic dye.",
+        "also_known_as": [
+          "indigo carmine",
+          "FD&C Blue 2"
+        ]
+      },
+      "E133": {
+        "name": "Brilliant Blue FCF",
+        "description": "Blue synthetic dye.",
+        "also_known_as": [
+          "brilliant blue",
+          "FD&C Blue 1"
+        ]
+      },
+      "E200": {
+        "name": "Sorbic Acid",
+        "description": "Preservative. Generally low risk.",
+        "also_known_as": [
+          "sorbic acid"
+        ]
+      },
+      "E202": {
+        "name": "Potassium Sorbate",
+        "description": "Preservative. Generally safe but may cause skin sensitivity.",
+        "also_known_as": [
+          "potassium sorbate"
+        ]
+      },
+      "E210": {
+        "name": "Benzoic Acid",
+        "description": "Preservative. Can cause hypersensitivity in some people.",
+        "also_known_as": [
+          "benzoic acid"
+        ]
+      },
+      "E212": {
+        "name": "Potassium Benzoate",
+        "description": "Preservative. Same concerns as sodium benzoate.",
+        "also_known_as": [
+          "potassium benzoate"
+        ]
+      },
+      "E220": {
+        "name": "Sulphur Dioxide",
+        "description": "Preservative and antioxidant. Can cause asthma in sensitive individuals.",
+        "also_known_as": [
+          "sulphur dioxide",
+          "sulfur dioxide",
+          "SO2"
+        ]
+      },
+      "E282": {
+        "name": "Calcium Propionate",
+        "description": "Preservative in bread. Linked to behavioral issues in some studies.",
+        "also_known_as": [
+          "calcium propionate"
+        ]
+      },
+      "E319": {
+        "name": "TBHQ",
+        "description": "Antioxidant preservative. High doses toxic in animals.",
+        "also_known_as": [
+          "TBHQ",
+          "tertiary butylhydroquinone"
+        ]
+      },
+      "E320": {
+        "name": "BHA",
+        "description": "Antioxidant preservative. Possible carcinogen at high doses.",
+        "also_known_as": [
+          "BHA",
+          "butylated hydroxyanisole"
+        ]
+      },
+      "E321": {
+        "name": "BHT",
+        "description": "Antioxidant preservative. Possible carcinogen at high doses.",
+        "also_known_as": [
+          "BHT",
+          "butylated hydroxytoluene"
+        ]
+      },
+      "E407": {
+        "name": "Carrageenan",
+        "description": "Thickener from seaweed. Controversial gut inflammation links.",
+        "also_known_as": [
+          "carrageenan"
+        ]
+      },
+      "E412": {
+        "name": "Guar Gum",
+        "description": "Thickener. Generally safe; may cause bloating.",
+        "also_known_as": [
+          "guar gum"
+        ]
+      },
+      "E415": {
+        "name": "Xanthan Gum",
+        "description": "Thickener. Generally safe; may cause digestive issues.",
+        "also_known_as": [
+          "xanthan gum"
+        ]
+      },
+      "E450": {
+        "name": "Diphosphates",
+        "description": "Raising agent and stabiliser.",
+        "also_known_as": [
+          "diphosphate",
+          "pyrophosphate"
+        ]
+      },
+      "E471": {
+        "name": "Mono- and Diglycerides",
+        "description": "Emulsifier. May contain trans fats.",
+        "also_known_as": [
+          "mono and diglycerides",
+          "monoglycerides",
+          "diglycerides",
+          "E471"
+        ]
+      },
+      "E476": {
+        "name": "Polyglycerol Polyricinoleate",
+        "description": "Emulsifier used in chocolate. Generally safe.",
+        "also_known_as": [
+          "PGPR",
+          "polyglycerol polyricinoleate"
+        ]
+      },
+      "E481": {
+        "name": "Sodium Stearoyl Lactylate",
+        "description": "Emulsifier. Generally safe.",
+        "also_known_as": [
+          "sodium stearoyl lactylate",
+          "SSL"
+        ]
+      },
+      "E631": {
+        "name": "Disodium Inosinate",
+        "description": "Flavour enhancer, often paired with MSG.",
+        "also_known_as": [
+          "disodium inosinate",
+          "IMP",
+          "inosinate"
+        ]
+      },
+      "E635": {
+        "name": "Disodium Ribonucleotides",
+        "description": "Flavour enhancer. May cause reactions similar to MSG.",
+        "also_known_as": [
+          "disodium ribonucleotides",
+          "ribonucleotides"
+        ]
+      },
+      "E950": {
+        "name": "Acesulfame K",
+        "description": "Artificial sweetener. Some concern about long-term effects.",
+        "also_known_as": [
+          "acesulfame K",
+          "acesulfame potassium",
+          "Sunett",
+          "Sweet One"
+        ]
+      },
+      "E955": {
+        "name": "Sucralose",
+        "description": "Artificial sweetener. Generally recognised as safe.",
+        "also_known_as": [
+          "sucralose",
+          "Splenda"
+        ]
+      }
+    },
+    "LOW_CONCERN": {
+      "E300": {
+        "name": "Ascorbic Acid (Vitamin C)",
+        "description": "Natural antioxidant. Beneficial nutrient.",
+        "also_known_as": [
+          "ascorbic acid",
+          "vitamin C",
+          "L-ascorbic acid"
+        ]
+      },
+      "E301": {
+        "name": "Sodium Ascorbate",
+        "description": "Form of vitamin C. Antioxidant.",
+        "also_known_as": [
+          "sodium ascorbate"
+        ]
+      },
+      "E306": {
+        "name": "Tocopherols (Vitamin E)",
+        "description": "Natural antioxidant. Beneficial nutrient.",
+        "also_known_as": [
+          "tocopherol",
+          "tocopherols",
+          "vitamin E"
+        ]
+      },
+      "E322": {
+        "name": "Lecithins",
+        "description": "Natural emulsifier from soy or sunflower. Generally safe.",
+        "also_known_as": [
+          "lecithin",
+          "soy lecithin",
+          "sunflower lecithin"
+        ]
+      },
+      "E330": {
+        "name": "Citric Acid",
+        "description": "Natural preservative and flavour enhancer. Very safe.",
+        "also_known_as": [
+          "citric acid"
+        ]
+      },
+      "E331": {
+        "name": "Sodium Citrates",
+        "description": "Salt of citric acid. Safe.",
+        "also_known_as": [
+          "sodium citrate",
+          "trisodium citrate"
+        ]
+      },
+      "E332": {
+        "name": "Potassium Citrates",
+        "description": "Salt of citric acid. Safe.",
+        "also_known_as": [
+          "potassium citrate"
+        ]
+      },
+      "E333": {
+        "name": "Calcium Citrates",
+        "description": "Calcium salt of citric acid. Beneficial mineral.",
+        "also_known_as": [
+          "calcium citrate"
+        ]
+      },
+      "E334": {
+        "name": "Tartaric Acid",
+        "description": "Natural acid from grapes. Safe.",
+        "also_known_as": [
+          "tartaric acid",
+          "L-tartaric acid"
+        ]
+      },
+      "E440": {
+        "name": "Pectins",
+        "description": "Natural thickener from fruit. Very safe. Beneficial fibre.",
+        "also_known_as": [
+          "pectin",
+          "pectins",
+          "apple pectin"
+        ]
+      },
+      "E441": {
+        "name": "Gelatine",
+        "description": "Animal-derived gelling agent. Safe but not vegan.",
+        "also_known_as": [
+          "gelatine",
+          "gelatin"
+        ]
+      },
+      "E500": {
+        "name": "Sodium Carbonates",
+        "description": "Raising agent. Generally safe.",
+        "also_known_as": [
+          "sodium carbonate",
+          "baking soda",
+          "bicarbonate of soda",
+          "sodium bicarbonate"
+        ]
+      },
+      "E503": {
+        "name": "Ammonium Carbonates",
+        "description": "Raising agent. Generally safe.",
+        "also_known_as": [
+          "ammonium carbonate",
+          "ammonium bicarbonate"
+        ]
+      },
+      "E901": {
+        "name": "Beeswax",
+        "description": "Glazing agent from bees. Safe.",
+        "also_known_as": [
+          "beeswax",
+          "white beeswax",
+          "yellow beeswax"
+        ]
+      },
+      "E938": {
+        "name": "Argon",
+        "description": "Inert packaging gas. Completely safe.",
+        "also_known_as": [
+          "argon"
+        ]
+      },
+      "E941": {
+        "name": "Nitrogen",
+        "description": "Inert packaging gas. Completely safe.",
+        "also_known_as": [
+          "nitrogen"
+        ]
+      },
+      "E948": {
+        "name": "Oxygen",
+        "description": "Packaging gas. Safe.",
+        "also_known_as": [
+          "oxygen"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "LabelLens Food Intelligence",
+  "name_for_model": "labellens_nutrition",
+  "description_for_human": "Offline AI Food Packaging Scanner, European Nutri-Score 2.0 Engine & Ingredient Intelligence.",
+  "description_for_model": "LabelLens provides precise nutritional intelligence, European Nutri-Score 2.0 calculations, 50+ hidden sugar aliases identification, palm oil derivatives tracking, 14 EU allergens detection, and EFSA food additive safety ratings. Uses a 115+ benchmark food catalog and Open Food Facts fallback.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://labellens.vercel.app/data/catalog.json"
+  },
+  "logo_url": "https://labellens.vercel.app/favicon.svg",
+  "contact_email": "science.exhibition.labellens@example.com",
+  "legal_info_url": "https://labellens.vercel.app/pricing.md"
+}

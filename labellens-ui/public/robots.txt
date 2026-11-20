@@ -1,0 +1,51 @@
+# robots.txt for LabelLens — AI Food Packaging & Nutrition Intelligence
+# Science Exhibition Project: Offline Edge AI Food Scanner & Nutri-Score 2.0 Engine
+# Website: https://labellens.vercel.app
+
+# Allow all search crawlers, research crawlers, and AI agents
+User-agent: *
+Allow: /
+
+# Dedicated AI Search Engines & LLM Assistants (Princeton GEO & AI-SEO Compliant)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemaps and AI Machine-Readable Manifests
+Sitemap: https://labellens-ui.vercel.app/sitemap.xml
+
+# LLM Context Specifications (https://llmstxt.org)
+# Quick Summary Context for LLMs: /llms.txt
+# Full Technical Documentation & Formulae for LLMs: /llms-full.txt
+# Public Food Catalog Dataset (JSON): /data/catalog.json
+# Ingredient Knowledge Base (JSON): /data/knowledge.json
+# Pricing / Open Source License: /pricing.md

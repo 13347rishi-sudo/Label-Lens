@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — LabelLens</title>
+    <meta name="description" content="Privacy Policy for LabelLens. 100% offline edge computing, zero cloud uploads, zero user tracking." />
+    <link rel="canonical" href="https://labellens-ui.vercel.app/privacy.html" />
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1f2937; background: #fafafa; margin: 0; padding: 40px 20px; }
+      .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 36px 44px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e5e7eb; }
+      h1 { font-size: 2rem; color: #111827; margin-bottom: 8px; font-weight: 700; }
+      h2 { font-size: 1.35rem; color: #1f2937; margin-top: 28px; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; }
+      p { font-size: 1.05rem; color: #4b5563; }
+      ul { padding-left: 20px; color: #4b5563; }
+      li { margin-bottom: 8px; }
+      .badge { display: inline-block; background: #eff6ff; color: #1d4ed8; font-weight: 600; font-size: 0.85rem; padding: 4px 12px; border-radius: 9999px; margin-bottom: 16px; border: 1px solid #bfdbfe; }
+      a { color: #2563eb; text-decoration: none; font-weight: 500; }
+      a:hover { text-decoration: underline; }
+      .footer-nav { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; display: flex; gap: 20px; font-size: 0.95rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="badge">Privacy First Guarantee</span>
+      <h1>Privacy Policy</h1>
+      <p><em>Last updated: November 20, 2026</em></p>
+
+      <p>
+        LabelLens was founded on the strict principle that healthcare and nutritional intelligence must never come at the expense of personal privacy. 
+        As an educational science fair project, our architecture is engineered from the ground up to ensure that your data never leaves your device.
+      </p>
+
+      <h2>1. Local & Edge Computation</h2>
+      <p>
+        All barcode parsing, optical image inspection, Nutri-Score 2.0 calculations, and ingredient analysis are executed directly on your client device 
+        (in your local web browser or on local exhibition kiosk edge hardware). We do not transmit captured food packaging photos or video frames to any remote cloud servers.
+      </p>
+
+      <h2>2. No Tracking & No Third-Party Telemetry</h2>
+      <ul>
+        <li><strong>No Analytics:</strong> We do not include Google Analytics, Facebook Pixels, advertising trackers, or fingerprinting scripts.</li>
+        <li><strong>No Account Required:</strong> You never need to sign up, provide an email address, or create a password to use LabelLens.</li>
+        <li><strong>No Cookies:</strong> We do not store persistent tracking cookies on your browser.</li>
+      </ul>
+
+      <h2>3. Camera Access</h2>
+      <p>
+        When you grant permission to use your smartphone or webcam camera, the video stream is processed exclusively in temporary volatile memory using client-side JavaScript (ZXing barcode library) or your local offline Ollama vision server. Video streams are never recorded or saved to disk.
+      </p>
+
+      <h2>4. Open Food Facts Live Fallback</h2>
+      <p>
+        If a scanned barcode is not found in our offline 115+ benchmark catalog, the web app queries the public Open Food Facts API (a non-profit, open nutritional registry) directly from your browser. Only the numeric barcode number is queried.
+      </p>
+
+      <h2>5. Educational & Scientific License</h2>
+      <p>
+        LabelLens is an open-source educational initiative. For questions or security audits, contact us at <a href="mailto:science.exhibition.labellens@example.com">science.exhibition.labellens@example.com</a>.
+      </p>
+
+      <div class="footer-nav">
+        <a href="/">← Back to App</a>
+        <a href="/about.html">About Project</a>
+        <a href="/contact.html">Contact Us</a>
+        <a href="/llms.txt">LLM Documentation</a>
+      </div>
+    </div>
+  </body>
+</html>
