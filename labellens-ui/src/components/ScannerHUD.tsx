@@ -8,7 +8,6 @@ import {
   Aperture,
   DeviceMobileCamera,
   Globe,
-  Sparkle,
   ShieldCheck,
   WarningCircle
 } from '@phosphor-icons/react';
@@ -465,10 +464,10 @@ export function ScannerHUD({
                   type="button"
                   onClick={() => captureAndAnalyze(true)}
                   disabled={isScanning}
-                  className="px-5 py-3 rounded-full bg-gradient-to-r from-amber-400 to-emerald-400 text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
+                  className="px-5 py-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
                 >
-                  <Sparkle size={18} weight="fill" />
-                  <span>{language === 'en' ? 'Read Label (AI)' : 'लेबल पढ़ें (AI)'}</span>
+                  <Aperture size={18} weight="bold" />
+                  <span>{language === 'en' ? 'Read Label (AI Vision)' : 'लेबल पढ़ें (AI विजन)'}</span>
                 </button>
               </div>
             </>

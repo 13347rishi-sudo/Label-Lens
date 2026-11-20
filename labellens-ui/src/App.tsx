@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { ScannerHUD } from './components/ScannerHUD';
-import { FoodCatalogDeck } from './components/FoodCatalogDeck';
 import { VerdictCard } from './components/VerdictCard';
 import { InteractiveBentoGrid } from './components/InteractiveBentoGrid';
 import { ChemicalInspector } from './components/ChemicalInspector';
@@ -158,40 +157,13 @@ export function App() {
         {activeTab === 'overview' && (
           <div className="space-y-7 animate-fadeIn">
             
-            {/* Top Row: Camera HUD & Fast Catalog Deck */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
-              {/* Left (5 cols): Camera Viewfinder */}
-              <div className="lg:col-span-5">
-                <ScannerHUD
-                  onProductResolved={handleSelectProduct}
-                  selectedModel={selectedModel}
-                  language={language}
-                />
-              </div>
-
-              {/* Right (7 cols): Catalog Shelf for Quick Testing */}
-              <div className="lg:col-span-7 apple-glass p-5 sm:p-6 rounded-3xl space-y-4 border border-white/[0.08]">
-                <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-                  <div>
-                    <h3 className="text-base font-bold text-white">
-                      {language === 'en' ? `Sample Foods (${EXHIBITION_PRODUCTS.length}+ Items)` : `नमूना खाद्य पदार्थ (${EXHIBITION_PRODUCTS.length}+)`}
-                    </h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">
-                      {language === 'en' ? 'Tap any food to inspect its Nutri-Score rating instantly' : 'न्यूट्री-स्कोर जांचने के लिए किसी भी खाद्य वस्तु पर टैप करें'}
-                    </p>
-                  </div>
-                  <div className="text-xs text-zinc-400 hidden sm:block">
-                    Active: <span className="font-bold text-white">{currentProduct.product_name}</span>
-                  </div>
-                </div>
-
-                <FoodCatalogDeck
-                  onSelectProduct={handleSelectProduct}
-                  selectedProductId={currentProduct.id}
-                />
-              </div>
-
+            {/* Top Row: Camera Viewfinder */}
+            <div className="w-full max-w-3xl mx-auto">
+              <ScannerHUD
+                onProductResolved={handleSelectProduct}
+                selectedModel={selectedModel}
+                language={language}
+              />
             </div>
 
             {/* Result Card First (Giant Grade Letter + 1-10 Score + Top 3 Findings) */}

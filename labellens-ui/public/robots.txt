@@ -48,4 +48,3 @@ Sitemap: https://labellens-ui.vercel.app/sitemap.xml
 # Full Technical Documentation & Formulae for LLMs: /llms-full.txt
 # Public Food Catalog Dataset (JSON): /data/catalog.json
 # Ingredient Knowledge Base (JSON): /data/knowledge.json
-# Pricing / Open Source License: /pricing.md

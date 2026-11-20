@@ -47,19 +47,28 @@ export function ChemicalInspector({ ingredients, knowledge, language = 'en' }: C
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         
         {/* 1. Palm Oil Status */}
-        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 ${
+        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex flex-col justify-between space-y-2.5 ${
           hasPalm
-            ? 'bg-orange-500/10 border-orange-500/30 text-orange-200'
-            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+            ? 'bg-orange-500/[0.04] border-orange-500/25'
+            : 'bg-emerald-500/[0.04] border-emerald-500/25'
         }`}>
-          <span className="text-2xl mt-0.5">{hasPalm ? '🌴' : '✅'}</span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Palm Oil Status</span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-bold border ${
+              hasPalm 
+                ? 'bg-orange-500/15 text-orange-300 border-orange-500/30' 
+                : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            }`}>
+              {hasPalm ? 'DETECTED' : 'CLEAR'}
+            </span>
+          </div>
           <div>
             <div className="font-bold text-white text-sm sm:text-base">
               {hasPalm 
                 ? (language === 'en' ? 'Contains Palm Oil' : 'पाम तेल शामिल है') 
                 : (language === 'en' ? 'Zero Palm Oil' : 'पाम तेल रहित')}
             </div>
-            <div className="text-xs text-zinc-300 mt-0.5 leading-relaxed">
+            <div className="text-xs text-zinc-400 mt-1 leading-relaxed">
               {hasPalm 
                 ? (language === 'en' ? 'Refined palm olein or palm fat detected' : 'रिफाइंड पाम तेल या वसा पाई गई')
                 : (language === 'en' ? 'Free of industrial palm fats' : 'औद्योगिक पाम वसा से मुक्त')}
@@ -68,19 +77,28 @@ export function ChemicalInspector({ ingredients, knowledge, language = 'en' }: C
         </div>
 
         {/* 2. Hidden Sweeteners */}
-        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 ${
+        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex flex-col justify-between space-y-2.5 ${
           hasHiddenSugars
-            ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+            ? 'bg-amber-500/[0.04] border-amber-500/25'
+            : 'bg-emerald-500/[0.04] border-emerald-500/25'
         }`}>
-          <span className="text-2xl mt-0.5">{hasHiddenSugars ? '🍬' : '✅'}</span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Covert Sweeteners</span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-bold border ${
+              hasHiddenSugars 
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' 
+                : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            }`}>
+              {hasHiddenSugars ? `${knowledge.hidden_sugars.length} ALIASES` : '0 ALIASES'}
+            </span>
+          </div>
           <div>
             <div className="font-bold text-white text-sm sm:text-base">
               {hasHiddenSugars 
                 ? `${knowledge.hidden_sugars.length} ${language === 'en' ? 'Hidden Sugar Aliases' : 'छिपी चीनी के नाम'}` 
                 : (language === 'en' ? 'Clean Sweeteners' : 'कोई छिपी चीनी नहीं')}
             </div>
-            <div className="text-xs text-zinc-300 mt-0.5 leading-relaxed">
+            <div className="text-xs text-zinc-400 mt-1 leading-relaxed">
               {hasHiddenSugars
                 ? knowledge.hidden_sugars.map((s) => s.name).slice(0, 2).join(', ')
                 : (language === 'en' ? 'No maltodextrin or covert syrups' : 'माल्टोडेक्सट्रिन या सिरप नहीं')}
@@ -89,19 +107,28 @@ export function ChemicalInspector({ ingredients, knowledge, language = 'en' }: C
         </div>
 
         {/* 3. Additives to Watch (Approved but flagged for sensitive groups) */}
-        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 ${
+        <div className={`p-4 rounded-2xl border text-xs sm:text-sm flex flex-col justify-between space-y-2.5 ${
           hasAdditives
-            ? 'bg-violet-500/10 border-violet-500/30 text-violet-200'
-            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+            ? 'bg-violet-500/[0.04] border-violet-500/25'
+            : 'bg-emerald-500/[0.04] border-emerald-500/25'
         }`}>
-          <span className="text-2xl mt-0.5">{hasAdditives ? '🧪' : '✅'}</span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Sensitivity Check</span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-bold border ${
+              hasAdditives 
+                ? 'bg-violet-500/15 text-violet-300 border-violet-500/30' 
+                : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            }`}>
+              {hasAdditives ? `${knowledge.additives.length} FLAGGED` : 'CLEAR'}
+            </span>
+          </div>
           <div>
             <div className="font-bold text-white text-sm sm:text-base">
               {hasAdditives 
                 ? `${knowledge.additives.length} ${language === 'en' ? 'Additives to Watch' : 'सावधानी योग्य योजक'}` 
                 : (language === 'en' ? 'No Additives to Watch' : 'कोई योजक चिन्हित नहीं')}
             </div>
-            <div className="text-xs text-zinc-300 mt-0.5 leading-relaxed">
+            <div className="text-xs text-zinc-400 mt-1 leading-relaxed">
               {hasAdditives
                 ? (language === 'en' ? 'Approved additives flagged for sensitivity' : 'संवेदनशीलता हेतु चिन्हित स्वीकृत योजक')
                 : (language === 'en' ? 'Free of flagged synthetic colors/sweeteners' : 'कृत्रिम रंगों या योजकों से मुक्त')}

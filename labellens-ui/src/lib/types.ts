@@ -19,6 +19,8 @@ export interface FactorBreakdown {
   points: number;
   direction: 'good' | 'bad';
   explanation: string;
+  threshold?: string;
+  isCapped?: boolean;
 }
 
 export interface ScoringResult {

@@ -58,16 +58,17 @@ export function Navbar({
 
         {/* Left: Brand Identity & Offline Badge */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-2xl bg-white/[0.08] border border-white/[0.12] shadow-sm">
-            <span className="text-lg">🔬</span>
+          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-white/10 to-white/[0.02] border border-white/10 text-xs font-mono font-bold text-white shadow-sm">
+            LL
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-base sm:text-lg tracking-tight text-white">
+            <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-sans">
               Label<span className="text-emerald-400">Lens</span>
             </span>
-            <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-              Offline Ready
-            </span>
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wider uppercase bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Offline Engine</span>
+            </div>
           </div>
         </div>
 
@@ -80,13 +81,12 @@ export function Navbar({
                 key={p.id}
                 onClick={() => onSelectProfile(p.id)}
                 title={p.description}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${active
-                    ? 'bg-white text-black shadow-sm'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${active
+                    ? 'bg-white text-black shadow-sm font-semibold'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
               >
-                <span className="text-xs">{p.icon}</span>
-                <span>{p.name}</span>
+                <span>{p.name} Profile</span>
               </button>
             );
           })}

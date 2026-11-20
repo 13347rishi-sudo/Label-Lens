@@ -5,12 +5,12 @@ export const TRANSLATIONS = {
     appTitle: 'LabelLens',
     appSubtitle: 'Food Packaging Scanner & Health Engine',
     exhibitionTag: 'Science Exhibition Kiosk',
-    disclaimer: '⚠️ Informational tool for science exhibition — not medical advice. Always verify allergens & nutrition directly on the packaging.',
-    trustStrip: '🔒 Runs 100% offline. Packaging photos and video feeds never leave this laptop.',
+    disclaimer: 'Informational tool for science exhibition — not medical advice. Always verify allergens & nutrition directly on the packaging.',
+    trustStrip: 'Runs 100% offline on edge hardware. Packaging photos and camera streams never leave this machine.',
     offlineBadge: 'Offline Mode: 115+ Foods Ready',
     onlineBadge: 'Online Fallback Active (Wi-Fi)',
     scanPacketBtn: 'Scan a Food Packet',
-    scanOrTap: 'Scan with camera, or tap a sample food below:',
+    scanOrTap: 'Hold any food packet or barcode up to the camera to scan:',
     topWarningsTitle: 'Top 3 Health Findings',
     healthIndex: 'Health Score',
     nutriScoreTitle: 'Nutri-Score Rating',
@@ -34,8 +34,8 @@ export const TRANSLATIONS = {
     },
     errors: {
       blurry: 'Label is blurry — please hold it steady with more light.',
-      notFound: 'Product not in offline catalog. Pick from sample foods or try another packet.',
-      cameraBlocked: 'Camera stream blocked. Try "Snap Photo" or pick from sample foods.',
+      notFound: 'Barcode not found. Try scanning the ingredients & nutrition table.',
+      cameraBlocked: 'Camera stream blocked. Try "Take Photo" or upload an image.',
       generic: 'Could not read label. Please hold steady and try again.'
     },
     grades: {
@@ -50,12 +50,12 @@ export const TRANSLATIONS = {
     appTitle: 'लेबल-लेंस',
     appSubtitle: 'खाद्य पैकेजिंग स्कैनर एवं स्वास्थ्य विश्लेषक',
     exhibitionTag: 'विज्ञान प्रदर्शनी कियोस्क',
-    disclaimer: '⚠️ प्रदर्शनी प्रदर्शन हेतु सूचनात्मक उपकरण — चिकित्सीय सलाह नहीं। पैकेज पर दी गई सामग्री की स्वयं जांच करें।',
-    trustStrip: '🔒 यह पूर्णतः ऑफलाइन चलता है। फोटो एवं कैमरा वीडियो कभी इस लैपटॉप से बाहर नहीं जाता।',
+    disclaimer: 'प्रदर्शनी प्रदर्शन हेतु सूचनात्मक उपकरण — चिकित्सीय सलाह नहीं। पैकेज पर दी गई सामग्री की स्वयं जांच करें।',
+    trustStrip: 'यह पूर्णतः ऑफलाइन चलता है। फोटो एवं कैमरा वीडियो कभी इस लैपटॉप से बाहर नहीं जाता।',
     offlineBadge: 'ऑफलाइन मोड: 115+ खाद्य उत्पाद तैयार',
     onlineBadge: 'ऑनलाइन खोज सक्रिय (वाई-फाई)',
     scanPacketBtn: 'खाद्य पैकेट स्कैन करें',
-    scanOrTap: 'कैमरे से स्कैन करें, या नीचे से कोई खाद्य पदार्थ चुनें:',
+    scanOrTap: 'स्कैन करने के लिए पैकेट या बारकोड कैमरे के सामने रखें:',
     topWarningsTitle: 'मुख्य 3 स्वास्थ्य निष्कर्ष',
     healthIndex: 'स्वास्थ्य स्कोर',
     nutriScoreTitle: 'न्यूट्री-स्कोर रेटिंग',
@@ -79,8 +79,8 @@ export const TRANSLATIONS = {
     },
     errors: {
       blurry: 'लेबल धुंधला है — कृपया अच्छी रोशनी में स्थिर रखें।',
-      notFound: 'डेटाबेस में नहीं मिला। नमूना खाद्य पदार्थों में से चुनें या दूसरा पैकेट आज़माएं।',
-      cameraBlocked: 'कैमरा उपलब्ध नहीं है। फोटो खींचें या नमूना खाद्य पदार्थों में से चुनें।',
+      notFound: 'बारकोड नहीं मिला। कृपया पोषण तालिका स्कैन करने का प्रयास करें।',
+      cameraBlocked: 'कैमरा उपलब्ध नहीं है। "फोटो खींचें" या छवि अपलोड करें।',
       generic: 'लेबल पढ़ने में असमर्थ। कृपया दोबारा प्रयास करें।'
     },
     grades: {

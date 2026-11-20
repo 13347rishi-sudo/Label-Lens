@@ -4,7 +4,7 @@ export const HEALTH_PROFILES: HealthProfile[] = [
   {
     id: 'general',
     name: 'Standard',
-    icon: '🛡️',
+    icon: '',
     tagline: 'Standard Health Rating',
     description: 'Standard health scoring based on European Nutri-Score & FSSAI benchmarks.',
     badgeColor: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
@@ -12,7 +12,7 @@ export const HEALTH_PROFILES: HealthProfile[] = [
   {
     id: 'diabetic',
     name: 'Diabetic',
-    icon: '🩸',
+    icon: '',
     tagline: 'Sugar Watch',
     description: 'Stricter penalty on free sugars, refined carbs, and high-glycemic sweeteners.',
     badgeColor: 'border-amber-500/30 text-amber-400 bg-amber-500/10'
@@ -41,7 +41,7 @@ export function applyHealthProfile(
       penaltyApplied += extraPenalty;
       hardWarnings.push({
         severity: 'CRITICAL',
-        message: `⚠️ HIGH GLYCEMIC SPIKE: ${sugars.toFixed(1)}g sugar per 100g exceeds diabetic limits (>15g).`,
+        message: `High Glycemic Index: ${sugars.toFixed(1)}g sugar per 100g exceeds diabetic limits (>15g).`,
         flag: 'sugar'
       });
       reasons.push(`Rapid blood glucose elevation risk: contains ${sugars.toFixed(1)}g total sugars.`);

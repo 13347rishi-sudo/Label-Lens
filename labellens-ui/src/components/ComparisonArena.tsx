@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { EXHIBITION_PRODUCTS } from '../lib/database';
 import { scoreProduct, getGradeColor } from '../lib/scoring';
-import { Trophy, ArrowRight } from '@phosphor-icons/react';
+import { ArrowRight } from '@phosphor-icons/react';
 import type { ProductItem } from '../lib/types';
 
 export function ComparisonArena() {
@@ -33,9 +33,8 @@ export function ComparisonArena() {
               Product {slot}
             </span>
             {isWin && (
-              <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                <Trophy size={13} weight="fill" />
-                Healthier Choice
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                Superior Choice
               </span>
             )}
           </div>

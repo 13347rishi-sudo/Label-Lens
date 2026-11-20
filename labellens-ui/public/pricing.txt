@@ -1,7 +1,0 @@
-# Pricing — LabelLens
-
-## Free / Educational
-- Price: $0/month
-- Limits: Unlimited scans, unlimited product comparisons
-- Features: Nutri-Score 2.0 calculation, 115+ offline benchmark foods, 50+ sugar aliases, palm oil tracker, 14 allergens, EFSA E-number inspector, health profile adjustments
-- License: Open Source Science Exhibition Project

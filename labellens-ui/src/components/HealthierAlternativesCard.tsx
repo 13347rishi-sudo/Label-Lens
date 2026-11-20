@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Sparkle, Package, Plant, ArrowRight, CheckCircle, ShieldCheck, CircleNotch, Brain } from '@phosphor-icons/react';
+import { ArrowRight, CheckCircle, ShieldCheck, CircleNotch, Brain } from '@phosphor-icons/react';
 import type { ProductItem, HealthierAlternative } from '../lib/types';
 import { getHealthierAlternatives, findProductById } from '../lib/database';
 import { generateAiSwapsWithOllama } from '../lib/alternativesEngine';
@@ -74,21 +74,19 @@ export function HealthierAlternativesCard({
       
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-            <Sparkle size={20} weight="fill" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                Healthier Alternatives
+                Healthier Alternatives & Natural Swaps
               </h3>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
                 {customAiSwaps ? 'AI Tailored' : 'Grade A / B'}
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Better options instead of <span className="text-zinc-200 font-medium">{product.product_name}</span>
+              Evidence-based nutritional alternatives for <span className="text-zinc-200 font-medium">{product.product_name}</span>
             </p>
           </div>
         </div>
@@ -133,9 +131,8 @@ export function HealthierAlternativesCard({
         
         {/* Column 1: Packaged Clean Swaps */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 px-1">
-            <Package size={15} className="text-sky-400" />
-            <span>Healthier Packaged Foods ({packagedSwaps.length})</span>
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-400 px-1">
+            <span>Packaged Alternatives ({packagedSwaps.length})</span>
           </div>
 
           <div className="space-y-3">
@@ -202,9 +199,8 @@ export function HealthierAlternativesCard({
 
         {/* Column 2: Natural Whole Foods (Pulses, Millets, Fruits) */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 px-1">
-            <Plant size={15} className="text-emerald-400" />
-            <span>Natural Foods (Millets, Pulses, Fruit) ({naturalSwaps.length})</span>
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-400 px-1">
+            <span>Natural Whole Foods ({naturalSwaps.length})</span>
           </div>
 
           <div className="space-y-3">
