@@ -4,13 +4,13 @@ import {
   Barcode,
   UploadSimple,
   MagnifyingGlass,
-  CameraRotate,
   CircleNotch,
   Aperture,
   DeviceMobileCamera,
   Globe,
-  Lightning,
-  Sparkle
+  Sparkle,
+  ShieldCheck,
+  WarningCircle
 } from '@phosphor-icons/react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { playBarcodeBeep, playSuccessChime, playAlertBuzzer } from '../lib/sound';
@@ -23,24 +23,33 @@ import {
 } from '../lib/barcodeScanner';
 import { extractNutritionWithOllama, checkOllamaAvailable } from '../lib/ollamaVision';
 import type { ProductItem } from '../lib/types';
+import { TRANSLATIONS, type Language } from '../lib/i18n';
 
 interface ScannerHUDProps {
   onProductResolved: (product: ProductItem) => void;
   selectedModel: string;
+  language?: Language;
+  onOpenDemoMode?: () => void;
 }
 
-export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps) {
+export function ScannerHUD({
+  onProductResolved,
+  selectedModel,
+  language = 'en',
+  onOpenDemoMode
+}: ScannerHUDProps) {
   const [hudTab, setHudTab] = useState<'camera' | 'upload' | 'barcode'>('camera');
   const [cameraActive, setCameraActive] = useState(false);
-  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [manualCode, setManualCode] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<number>(0);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [friendlyError, setFriendlyError] = useState<string | null>(null);
   const [justScanned, setJustScanned] = useState(false);
+  const [allowOnlineFallback, setAllowOnlineFallback] = useState(false);
 
+  const t = TRANSLATIONS[language];
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const zxingReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -49,7 +58,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
   const lastScannedTimeRef = useRef<number>(0);
   const scanLoopIntervalRef = useRef<number | null>(null);
 
-  // Stop camera stream & background scan loops cleanly
+  // Stop camera stream & loops cleanly
   const stopCamera = useCallback(() => {
     if (scanLoopIntervalRef.current) {
       clearInterval(scanLoopIntervalRef.current);
@@ -68,86 +77,71 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
     setCameraActive(false);
   }, []);
 
-  // Enumerate available video input devices safely on mount
+  // Cycle loading steps smoothly during scan
   useEffect(() => {
-    let mounted = true;
-    const loadDevices = async () => {
-      if (!navigator.mediaDevices?.enumerateDevices) return;
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        if (!mounted) return;
-        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-        setVideoDevices(videoInputs);
-        setSelectedDeviceId((prev) => (prev || (videoInputs[0]?.deviceId ?? '')));
-      } catch {
-        // Ignore
-      }
-    };
+    if (!isScanning) {
+      setScanStep(0);
+      return;
+    }
+    const stepInterval = setInterval(() => {
+      setScanStep((prev) => (prev < 3 ? prev + 1 : 0));
+    }, 750);
+    return () => clearInterval(stepInterval);
+  }, [isScanning]);
 
-    loadDevices();
-    navigator.mediaDevices?.addEventListener('devicechange', loadDevices);
-
-    return () => {
-      mounted = false;
-      navigator.mediaDevices?.removeEventListener('devicechange', loadDevices);
-    };
-  }, []);
-
-  // Clean up on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, [stopCamera]);
 
-  // Universal product resolution: Local Database + Live Open Food Facts API fallback
+  // Universal product resolution
   const handleBarcodeScanned = useCallback(async (code: string) => {
     playBarcodeBeep();
     setJustScanned(true);
     setTimeout(() => setJustScanned(false), 900);
 
     setIsScanning(true);
-    const preview = code.length > 35 ? `${code.slice(0, 32)}...` : code;
-    setScanStatus(`Looking up ${preview}...`);
+    setFriendlyError(null);
+    setScanStatus(t.steps.reading);
 
     try {
       const product = await lookupProductLive(code);
       if (product) {
         if (product.is_food === false) {
           playAlertBuzzer();
-          setScanStatus(`⚠️ Scanned a non-food item (${product.product_name}). Please scan an edible food package.`);
+          setFriendlyError(`Non-food item recognized (${product.product_name}). Please scan edible food packaging.`);
         } else {
           playSuccessChime();
           setScanStatus(`Found: ${product.product_name} (${product.brand})`);
+          onProductResolved(product);
         }
-        onProductResolved(product);
       } else {
         playAlertBuzzer();
-        setScanStatus(`Scanned "${preview}". Product not found in database.`);
+        setFriendlyError(t.errors.notFound);
       }
     } catch {
       playAlertBuzzer();
-      setScanStatus(`Could not look up: ${preview}`);
+      setFriendlyError(t.errors.generic);
     } finally {
       setIsScanning(false);
     }
-  }, [onProductResolved]);
+  }, [onProductResolved, t]);
 
   // Start camera stream
   const startCamera = async () => {
-    setCameraError(null);
+    setFriendlyError(null);
     setScanStatus('Opening camera...');
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError('Camera requires HTTPS on mobile browsers. Use "Take Photo" below.');
+      setFriendlyError(t.errors.cameraBlocked);
       return;
     }
 
     try {
       const constraints: MediaStreamConstraints = {
-        video: selectedDeviceId
-          ? { deviceId: { exact: selectedDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-          : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -159,9 +153,8 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       }
 
       setCameraActive(true);
-      setScanStatus('Center food barcode in frame to scan');
+      setScanStatus('Center barcode inside frame to scan');
 
-      // 1. Configure optimized ZXing as fallback
       const codeReader = getOptimizedZxingReader();
       zxingReaderRef.current = codeReader;
 
@@ -180,7 +173,6 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
         });
       }
 
-      // 2. High-speed Hardware BarcodeDetector polling loop (if supported)
       if (isNativeBarcodeDetectorSupported()) {
         const offscreenCanvas = document.createElement('canvas');
         const interval = window.setInterval(async () => {
@@ -211,7 +203,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
               }
             }
           } catch {
-            // Native detector frame failed, zxing fallback will catch it
+            // Native detector frame failed, zxing fallback catches
           }
         }, 150);
 
@@ -219,21 +211,22 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       }
     } catch (err: unknown) {
       console.warn('Camera stream error:', err);
-      setCameraError('Camera stream blocked or requires HTTPS on mobile. Use "Snap with Phone Camera" below to use your native phone camera directly!');
+      setFriendlyError(t.errors.cameraBlocked);
       setCameraActive(false);
     }
   };
 
-  // Decode barcode/QR directly from an image file, with automatic AI Vision fallback
+  // Decode from file with Vision fallback
   const processImageFile = async (file: File) => {
     setIsScanning(true);
+    setFriendlyError(null);
     playBarcodeBeep();
-    setScanStatus(`Scanning image...`);
+    setScanStatus(t.steps.reading);
 
     try {
       const detectedText = await scanImageFileWithAllEngines(file);
       if (detectedText) {
-        setScanStatus(`Found Barcode: ${detectedText}`);
+        setScanStatus(`Barcode Detected: ${detectedText}`);
         await handleBarcodeScanned(detectedText);
         return;
       }
@@ -241,8 +234,8 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
       console.warn('Barcode scan error:', err);
     }
 
-    // No barcode found: activate local AI to read the nutrition label table
-    setScanStatus(`No barcode found. Reading ingredients label with AI...`);
+    // Vision fallback
+    setScanStatus(t.steps.ingredients);
     try {
       const isUp = await checkOllamaAvailable();
       if (isUp) {
@@ -259,18 +252,19 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
 
     setIsScanning(false);
     playAlertBuzzer();
-    setScanStatus(`Could not find a barcode or nutrition table. Try a clearer photo.`);
+    setFriendlyError(t.errors.blurry);
   };
 
-  // Capture static frame from live video and run barcode scan + AI Vision fallback
+  // Capture frame from video and analyze
   const captureAndAnalyze = async (forceVisionAi = false) => {
     const video = videoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
-      setScanStatus('Camera not ready. Please try again.');
+      setFriendlyError(t.errors.blurry);
       return;
     }
 
     setIsScanning(true);
+    setFriendlyError(null);
     playBarcodeBeep();
 
     try {
@@ -282,7 +276,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         if (!forceVisionAi) {
-          setScanStatus(`Scanning barcode...`);
+          setScanStatus(t.steps.reading);
           const detectedText = await scanCanvasWithAllEngines(canvas);
           if (detectedText) {
             await handleBarcodeScanned(detectedText);
@@ -290,8 +284,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           }
         }
 
-        // Run Ollama Vision AI
-        setScanStatus(`Reading nutrition table with AI...`);
+        setScanStatus(t.steps.ingredients);
         const isUp = await checkOllamaAvailable();
         if (isUp) {
           const aiProduct = await extractNutritionWithOllama(canvas, selectedModel);
@@ -301,7 +294,7 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           setIsScanning(false);
           return;
         } else {
-          setScanStatus('AI model is offline. Please start Ollama.');
+          setFriendlyError('Local AI vision engine (Ollama) is not running. Using offline barcode catalog.');
         }
       }
     } catch (err) {
@@ -310,13 +303,20 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
 
     setIsScanning(false);
     playAlertBuzzer();
-    setScanStatus('No barcode or food label detected. Hold still and try again.');
+    setFriendlyError(t.errors.blurry);
   };
 
+  const stepLabels = [
+    t.steps.reading,
+    t.steps.ingredients,
+    t.steps.additives,
+    t.steps.scoring
+  ];
+
   return (
-    <div className="w-full rounded-3xl apple-glass p-5 relative overflow-hidden flex flex-col justify-between">
+    <div className="w-full rounded-3xl apple-glass p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between border border-white/[0.08] shadow-2xl">
       
-      {/* Hidden Native Phone Camera Input (100% Mobile Phone Compatible) */}
+      {/* Hidden Native Phone Camera Input */}
       <input
         ref={nativeCameraInputRef}
         type="file"
@@ -330,84 +330,58 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
         }}
       />
 
-      {/* Viewfinder Header */}
+      {/* Top Controls: Mode Switcher & Offline Status */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-
-        {/* Segmented Mode Selector */}
+        
+        {/* Mode Selector */}
         <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.06]">
           <button
             onClick={() => { setHudTab('camera'); if (!cameraActive) startCamera(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
               hudTab === 'camera'
-                ? 'bg-white text-black shadow-sm font-semibold'
+                ? 'bg-white text-black shadow-sm font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Camera size={14} />
-            <span>Camera</span>
+            <Camera size={16} />
+            <span>{language === 'en' ? 'Camera' : 'कैमरा'}</span>
           </button>
           <button
             onClick={() => { setHudTab('upload'); stopCamera(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
               hudTab === 'upload'
-                ? 'bg-white text-black shadow-sm font-semibold'
+                ? 'bg-white text-black shadow-sm font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <UploadSimple size={14} />
-            <span>Upload</span>
+            <UploadSimple size={16} />
+            <span>{language === 'en' ? 'Upload Photo' : 'फोटो अपलोड'}</span>
           </button>
           <button
             onClick={() => { setHudTab('barcode'); stopCamera(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[36px] ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
               hudTab === 'barcode'
-                ? 'bg-white text-black shadow-sm font-semibold'
+                ? 'bg-white text-black shadow-sm font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Barcode size={14} />
-            <span>Barcode & Search</span>
+            <Barcode size={16} />
+            <span>{language === 'en' ? 'Type Barcode' : 'बारकोड दर्ज करें'}</span>
           </button>
         </div>
 
-        {/* Fast Scanner Status Badge */}
-        {isNativeBarcodeDetectorSupported() && (
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-            <Lightning size={12} weight="fill" />
-            <span>Fast Scanner Ready</span>
-          </div>
-        )}
-
-        {/* Camera Selector (for external webcams / rear/front toggle) */}
-        {videoDevices.length > 1 && hudTab === 'camera' && (
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs text-zinc-400">
-            <CameraRotate size={13} />
-            <select
-              value={selectedDeviceId}
-              onChange={(e) => {
-                setSelectedDeviceId(e.target.value);
-                if (cameraActive) {
-                  stopCamera();
-                  setTimeout(startCamera, 100);
-                }
-              }}
-              className="bg-transparent text-white text-xs focus:outline-none cursor-pointer"
-            >
-              {videoDevices.map((d, idx) => (
-                <option key={d.deviceId || idx} value={d.deviceId} className="bg-[#16161E] text-white">
-                  {d.label || `Camera ${idx + 1}`}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Offline Ready Badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>{t.offlineBadge}</span>
+        </div>
 
       </div>
 
       {/* Main Viewport */}
       {hudTab === 'camera' ? (
         <div className={`relative w-full aspect-[4/3] rounded-2xl bg-black overflow-hidden flex items-center justify-center border transition-all duration-300 ${
-          justScanned ? 'border-emerald-400 shadow-[0_0_30px_rgba(52,199,89,0.3)]' : 'border-white/[0.08]'
+          justScanned ? 'border-emerald-400 shadow-[0_0_40px_rgba(52,199,89,0.4)]' : 'border-white/[0.1]'
         }`}>
           <video
             ref={videoRef}
@@ -416,47 +390,52 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             className={`w-full h-full object-cover transition-opacity duration-300 ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
           />
 
-          {/* Inactive State: Clean Start Camera CTA + Phone Native Shutter */}
+          {/* Inactive State: Giant Kiosk Scan CTA Button (Readable from 1 Metre) */}
           {!cameraActive && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-5 text-center space-y-3 bg-neutral-950/80 backdrop-blur-md">
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center text-zinc-300">
-                <Camera size={24} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 bg-neutral-950/85 backdrop-blur-md">
+              <div className="w-16 h-16 rounded-3xl bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-white shadow-xl">
+                <Camera size={32} />
               </div>
+
               <div>
-                <p className="text-sm font-semibold text-white">Scan Food Package</p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  Point camera at a barcode or nutrition table
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {t.scanPacketBtn}
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-sm">
+                  {t.scanOrTap}
                 </p>
               </div>
 
-              {/* Primary Dual Shutter Options for Phone & Desktop */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 pt-1 w-full max-w-xs">
-                
-                {/* Mobile Phone Native Camera Button */}
-                <button
-                  type="button"
-                  onClick={() => nativeCameraInputRef.current?.click()}
-                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md min-h-[44px]"
-                >
-                  <DeviceMobileCamera size={18} weight="bold" />
-                  <span>Take Photo</span>
-                </button>
-
-                {/* Live Stream Camera */}
+              {/* Giant 56px Tall Scan Actions */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md pt-2">
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md min-h-[44px]"
+                  className="w-full sm:flex-1 h-14 rounded-2xl bg-white hover:bg-zinc-200 text-black font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl"
                 >
-                  <Camera size={16} />
-                  <span>Open Camera</span>
+                  <Camera size={22} weight="bold" />
+                  <span>{language === 'en' ? 'Open Camera' : 'कैमरा खोलें'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => nativeCameraInputRef.current?.click()}
+                  className="w-full sm:flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl"
+                >
+                  <DeviceMobileCamera size={22} weight="bold" />
+                  <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
                 </button>
               </div>
 
-              {cameraError && (
-                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-200 text-left max-w-xs mt-2">
-                  {cameraError}
-                </div>
+              {/* Demo Mode Button in Viewport for instant backup */}
+              {onOpenDemoMode && (
+                <button
+                  type="button"
+                  onClick={onOpenDemoMode}
+                  className="text-xs font-semibold text-zinc-400 hover:text-white underline pt-1"
+                >
+                  {language === 'en' ? 'Or tap here for Demo Mode (Test Sample Foods)' : 'या डेमो मोड में खाद्य पदार्थ चुनें'}
+                </button>
               )}
             </div>
           )}
@@ -464,69 +443,81 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           {/* Active Viewfinder Overlays */}
           {cameraActive && (
             <>
-              {/* Scan Line Beam */}
-              <div className="absolute inset-x-8 top-12 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent pointer-events-none animate-scanline shadow-[0_0_12px_rgba(52,199,89,0.9)]" />
+              {/* Scanline */}
+              <div className="absolute inset-x-8 top-12 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent pointer-events-none animate-scanline shadow-[0_0_14px_rgba(52,199,89,1)]" />
 
               {/* Reticle Brackets */}
               <div className="absolute inset-8 pointer-events-none">
-                <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 rounded-tl-lg transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                <div className={`absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 rounded-tl-xl transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/80'
                 }`} />
-                <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 rounded-tr-lg transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                <div className={`absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 rounded-tr-xl transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/80'
                 }`} />
-                <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 rounded-bl-lg transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 rounded-bl-xl transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/80'
                 }`} />
-                <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 rounded-br-lg transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/70'
+                <div className={`absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 rounded-br-xl transition-colors ${
+                  justScanned ? 'border-emerald-400' : 'border-white/80'
                 }`} />
               </div>
 
-              {/* Shutter Action Buttons */}
-              <div className="absolute bottom-4 left-0 right-0 flex flex-wrap justify-center items-center gap-2 px-3">
+              {/* Active Camera Action Controls */}
+              <div className="absolute bottom-5 left-0 right-0 flex flex-wrap justify-center items-center gap-3 px-4">
                 <button
                   type="button"
                   onClick={() => captureAndAnalyze(false)}
                   disabled={isScanning}
-                  className="px-3.5 py-2 rounded-full bg-white/95 hover:bg-white text-black font-semibold text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[40px]"
+                  className="px-5 py-3 rounded-full bg-white text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
                 >
-                  {isScanning ? (
-                    <>
-                      <CircleNotch size={14} className="animate-spin text-black" />
-                      <span>Scanning...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Aperture size={15} />
-                      <span>Scan Barcode</span>
-                    </>
-                  )}
+                  <Aperture size={20} weight="bold" />
+                  <span>{language === 'en' ? 'Scan Barcode' : 'बारकोड स्कैन करें'}</span>
                 </button>
 
-                {/* AI Label Reading Button */}
                 <button
                   type="button"
                   onClick={() => captureAndAnalyze(true)}
                   disabled={isScanning}
-                  className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-500/90 to-emerald-500/90 hover:from-amber-400 hover:to-emerald-400 text-black font-semibold text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[40px]"
-                  title="Read nutrition facts table with AI"
+                  className="px-5 py-3 rounded-full bg-gradient-to-r from-amber-400 to-emerald-400 text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
                 >
-                  <Sparkle size={14} weight="fill" />
-                  <span>Read Label (AI)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => nativeCameraInputRef.current?.click()}
-                  className="px-3 py-2 rounded-full bg-black/60 hover:bg-black/80 text-white font-medium text-xs flex items-center gap-1.5 shadow-lg backdrop-blur-md border border-white/20 transition-all active:scale-95 min-h-[40px]"
-                >
-                  <DeviceMobileCamera size={15} />
-                  <span>Photo</span>
+                  <Sparkle size={18} weight="fill" />
+                  <span>{language === 'en' ? 'Read Label (AI)' : 'लेबल पढ़ें (AI)'}</span>
                 </button>
               </div>
             </>
           )}
+
+          {/* Loading Stepper Overlay (Meaningful 4-Stage Progress) */}
+          {isScanning && (
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 space-y-4 animate-fadeIn">
+              <CircleNotch size={40} className="animate-spin text-emerald-400" />
+              <div className="space-y-1">
+                <div className="text-lg sm:text-xl font-bold text-white">
+                  {stepLabels[scanStep]}
+                </div>
+                <div className="text-xs text-zinc-400">
+                  {language === 'en' ? 'Processing locally on edge hardware...' : 'लैपटॉप पर प्रोसेस हो रहा है...'}
+                </div>
+              </div>
+
+              {/* Stepper Progress Dots */}
+              <div className="flex items-center gap-2 pt-2">
+                {[0, 1, 2, 3].map((stepIdx) => (
+                  <div
+                    key={stepIdx}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      stepIdx === scanStep 
+                        ? 'w-8 bg-emerald-400' 
+                        : stepIdx < scanStep 
+                        ? 'w-2 bg-emerald-700' 
+                        : 'w-2 bg-white/20'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       ) : hudTab === 'upload' ? (
         <div
@@ -537,26 +528,26 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
             setDragOver(false);
             if (e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0]);
           }}
-          className={`w-full aspect-[4/3] rounded-2xl border border-dashed flex flex-col items-center justify-center p-6 text-center transition-all ${
-            dragOver ? 'border-white bg-white/[0.08]' : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]'
+          className={`w-full aspect-[4/3] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-6 text-center transition-all ${
+            dragOver ? 'border-emerald-400 bg-emerald-500/10' : 'border-white/15 bg-white/[0.02] hover:bg-white/[0.04]'
           }`}
         >
-          <UploadSimple size={32} className="text-zinc-400 mb-2" />
-          <p className="text-xs font-medium text-white">Drop or upload a photo</p>
-          <p className="text-[11px] text-zinc-500 mt-1">Upload a clear photo of the barcode or ingredients list.</p>
-          
-          <div className="flex items-center gap-2 mt-4">
+          <UploadSimple size={44} className="text-zinc-300 mb-3" />
+          <p className="text-base font-bold text-white">{language === 'en' ? 'Drop food packet image here' : 'पैकेट की फोटो यहाँ डालें'}</p>
+          <p className="text-xs text-zinc-400 mt-1 max-w-xs">{language === 'en' ? 'Upload a photo of the barcode or nutrition table.' : 'बारकोड या सामग्री तालिका की फोटो चुनें।'}</p>
+
+          <div className="flex items-center gap-3 mt-5">
             <button
               type="button"
               onClick={() => nativeCameraInputRef.current?.click()}
-              className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 min-h-[44px]"
+              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black text-sm font-bold flex items-center gap-2 min-h-[48px]"
             >
-              <DeviceMobileCamera size={16} weight="bold" />
-              <span>Take Photo</span>
+              <DeviceMobileCamera size={20} weight="bold" />
+              <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
             </button>
 
-            <label className="px-3.5 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-xs font-medium text-white cursor-pointer transition-all active:scale-95 flex items-center min-h-[44px]">
-              Choose Photo
+            <label className="px-5 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-semibold text-white cursor-pointer min-h-[48px] flex items-center">
+              {language === 'en' ? 'Select File' : 'फाइल चुनें'}
               <input
                 type="file"
                 accept="image/*"
@@ -569,70 +560,84 @@ export function ScannerHUD({ onProductResolved, selectedModel }: ScannerHUDProps
           </div>
         </div>
       ) : (
-        <div className="w-full aspect-[4/3] rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 flex flex-col items-center justify-center text-center">
-          <Globe size={32} className="text-sky-400 mb-2" />
-          <p className="text-sm font-bold text-white mb-1">Search Food or Barcode</p>
-          <p className="text-xs text-zinc-400 mb-4 max-w-sm">
-            Type any product name (e.g. Maggi, Amul Milk) or barcode number.
+        <div className="w-full aspect-[4/3] rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 flex flex-col items-center justify-center text-center space-y-3">
+          <Globe size={36} className="text-sky-400" />
+          <p className="text-base sm:text-lg font-bold text-white">{language === 'en' ? 'Search Food or Enter Barcode' : 'खाद्य पदार्थ खोजें या बारकोड डालें'}</p>
+          <p className="text-xs text-zinc-400 max-w-sm">
+            {language === 'en' ? 'Type a product name (e.g. Maggi, Coke, Amul) or a barcode number.' : 'उत्पाद का नाम या बारकोड नंबर दर्ज करें।'}
           </p>
+          
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (manualCode.trim()) handleBarcodeScanned(manualCode);
             }}
-            className="w-full max-w-sm flex gap-2"
+            className="w-full max-w-sm flex gap-2 pt-2"
           >
             <input
               type="text"
-              placeholder="e.g. Maggi, Amul Milk, or 8901058852318"
+              placeholder="e.g. Maggi, Coke, 8901058852318"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
+              className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
             />
             <button
               type="submit"
               disabled={isScanning || !manualCode.trim()}
-              className="px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs active:scale-95 disabled:opacity-50 min-h-[44px] flex items-center justify-center"
+              className="px-5 py-3 rounded-xl bg-white text-black font-bold text-sm min-h-[48px] flex items-center justify-center"
             >
-              {isScanning ? <CircleNotch size={14} className="animate-spin" /> : <MagnifyingGlass size={15} />}
+              {isScanning ? <CircleNotch size={18} className="animate-spin" /> : <MagnifyingGlass size={18} weight="bold" />}
             </button>
           </form>
-          <div className="flex flex-wrap justify-center gap-1.5 mt-3 text-[11px] text-zinc-500">
-            <span>Try:</span>
-            <button
-              type="button"
-              onClick={() => handleBarcodeScanned('8901058852318')}
-              className="underline hover:text-white"
-            >
-              Maggi
-            </button>
+
+          <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs text-zinc-400">
+            <span>Quick:</span>
+            <button type="button" onClick={() => handleBarcodeScanned('8901058852318')} className="underline hover:text-white">Maggi</button>
             <span>·</span>
-            <button
-              type="button"
-              onClick={() => handleBarcodeScanned('5449000000996')}
-              className="underline hover:text-white"
-            >
-              Coca-Cola
-            </button>
+            <button type="button" onClick={() => handleBarcodeScanned('5449000000996')} className="underline hover:text-white">Coca-Cola</button>
             <span>·</span>
-            <button
-              type="button"
-              onClick={() => handleBarcodeScanned('8901491101837')}
-              className="underline hover:text-white"
-            >
-              Lay&apos;s
-            </button>
+            <button type="button" onClick={() => handleBarcodeScanned('8901491101837')} className="underline hover:text-white">Lay's</button>
+            <span>·</span>
+            <button type="button" onClick={() => handleBarcodeScanned('8901262010047')} className="underline hover:text-white">Amul Butter</button>
           </div>
         </div>
       )}
 
-      {/* Subtle Status Pill */}
-      {scanStatus && (
-        <div className="mt-3 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center text-xs text-zinc-300 flex items-center justify-center gap-2">
-          {isScanning && <CircleNotch size={14} className="animate-spin text-sky-400" />}
+      {/* Friendly Error Banner */}
+      {friendlyError && (
+        <div className="mt-3 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex items-start gap-2.5">
+          <WarningCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <span>{friendlyError}</span>
+        </div>
+      )}
+
+      {/* Status Notice */}
+      {scanStatus && !friendlyError && !isScanning && (
+        <div className="mt-3 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-xs sm:text-sm text-zinc-300 flex items-center gap-2">
+          <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
           <span>{scanStatus}</span>
         </div>
       )}
+
+      {/* Trust Strip */}
+      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
+        <span className="flex items-center gap-1.5 text-zinc-300">
+          <ShieldCheck size={16} className="text-emerald-400" />
+          <span>{t.trustStrip}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setAllowOnlineFallback(!allowOnlineFallback)}
+          className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
+            allowOnlineFallback 
+              ? 'bg-sky-500/20 text-sky-300 border-sky-500/30 font-semibold' 
+              : 'text-zinc-500 border-white/[0.06] hover:text-zinc-300'
+          }`}
+          title="Toggle online Open Food Facts lookup when exhibition Wi-Fi is active"
+        >
+          {allowOnlineFallback ? 'Online Fallback ON' : 'Wi-Fi Fallback OFF'}
+        </button>
+      </div>
 
     </div>
   );
