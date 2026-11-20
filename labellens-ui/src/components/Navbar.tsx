@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
+  GearSix,
   SpeakerHigh,
   SpeakerSimpleSlash,
   ArrowsOut,
   ArrowsIn,
-  Cpu,
-  Info,
-  Translate
+  Info
 } from '@phosphor-icons/react';
 import { HEALTH_PROFILES } from '../lib/profiles';
 import type { HealthProfileId } from '../lib/types';
@@ -34,6 +33,8 @@ export function Navbar({
 }: NavbarProps) {
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const handleToggleSound = () => {
     const state = toggleSound();
@@ -42,112 +43,137 @@ export function Navbar({
 
   const handleToggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => { });
+      document.documentElement.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => { });
+        document.exitFullscreen().catch(() => {});
       }
       setIsFullscreen(false);
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSettingsOpen]);
+
   return (
-    <header className="sticky top-0 z-50 w-full apple-glass border-b border-white/[0.08] backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
-
-        {/* Left: Brand Identity & Offline Badge */}
+    <header className="sticky top-0 z-40 w-full bg-[#F6F3EC]/95 backdrop-blur-md border-b border-[#E2DDD4]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between gap-4">
+        
+        {/* Left: Brand & Quiet Offline Indicator */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-white/10 to-white/[0.02] border border-white/10 text-xs font-mono font-bold text-white shadow-sm">
-            LL
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-base sm:text-lg tracking-tight text-white font-sans">
-              Label<span className="text-emerald-400">Lens</span>
-            </span>
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wider uppercase bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Offline Engine</span>
-            </div>
+          <a href="/" className="text-xl sm:text-2xl font-bold tracking-tight text-[#161616] hover:opacity-85 transition-opacity">
+            LabelLens
+          </a>
+          <span className="text-[#969188]">/</span>
+          <div className="flex items-center gap-1.5 text-xs text-[#6E6A63] font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#038141]" />
+            <span>Offline</span>
           </div>
         </div>
 
-        {/* Center: Health Profile Segmented Control */}
-        <div className="hidden lg:flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-          {HEALTH_PROFILES.map((p) => {
-            const active = p.id === activeProfile;
-            return (
-              <button
-                key={p.id}
-                onClick={() => onSelectProfile(p.id)}
-                title={p.description}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 ${active
-                    ? 'bg-white text-black shadow-sm font-semibold'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+        {/* Right: Essential Direct Controls + Quiet Settings Menu */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          
+          {/* Health Profile Switch: Standard / Diabetic */}
+          <div className="flex items-center p-0.5 rounded-lg bg-[#EFECE4] border border-[#E2DDD4]">
+            {HEALTH_PROFILES.map((p) => {
+              const active = p.id === activeProfile;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => onSelectProfile(p.id)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                    active
+                      ? 'bg-[#161616] text-[#F6F3EC] shadow-xs'
+                      : 'text-[#6E6A63] hover:text-[#161616]'
                   }`}
-              >
-                <span>{p.name} Profile</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right: Kiosk Controls & Language Switcher */}
-        <div className="flex items-center gap-2">
-
-          {/* AI Model Indicator for Science Exhibition Judges */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-300">
-            <Cpu size={14} className="text-zinc-400 shrink-0" />
-            <select
-              value={selectedModel}
-              onChange={(e) => onSelectModel(e.target.value)}
-              className="bg-transparent text-zinc-300 text-xs focus:outline-none cursor-pointer"
-            >
-              <option value="qwen3.5:2b" className="bg-[#16161E] text-white">
-                qwen3.5:2b (Edge AI)
-              </option>
-              <option value="qwen3-vl:8b" className="bg-[#16161E] text-white">
-                qwen3-vl:8b
-              </option>
-            </select>
+                >
+                  {p.name}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Language Toggle (EN / हिंदी) */}
+          {/* Language Toggle: EN / हिंदी */}
           <button
             onClick={() => onToggleLanguage(language === 'en' ? 'hi' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-zinc-200 hover:text-white font-bold text-xs transition-all active:scale-95 min-h-[40px]"
-            title="Switch language (English / हिंदी)"
+            className="px-2.5 py-1.5 rounded-lg border border-[#E2DDD4] bg-white hover:bg-[#EFECE4] text-xs font-mono font-medium text-[#161616] transition-all"
+            title="Toggle Language"
           >
-            <Translate size={16} className="text-sky-400" />
-            <span>{language === 'en' ? 'हिंदी' : 'English'}</span>
+            {language === 'en' ? 'हिंदी' : 'EN'}
           </button>
 
-          {/* Sound Toggle */}
-          <button
-            onClick={handleToggleSound}
-            title={soundOn ? 'Sound feedback on' : 'Sound feedback off'}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-400 hover:text-white transition-all active:scale-95"
-          >
-            {soundOn ? <SpeakerHigh size={16} /> : <SpeakerSimpleSlash size={16} />}
-          </button>
+          {/* Settings Menu Dropdown */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="w-8 h-8 rounded-lg border border-[#E2DDD4] bg-white hover:bg-[#EFECE4] flex items-center justify-center text-[#161616] transition-all"
+              title="Kiosk Settings"
+            >
+              <GearSix size={16} />
+            </button>
 
-          {/* Fullscreen Toggle */}
-          <button
-            onClick={handleToggleFullscreen}
-            title="Toggle Kiosk Fullscreen"
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-400 hover:text-white transition-all active:scale-95"
-          >
-            {isFullscreen ? <ArrowsIn size={16} /> : <ArrowsOut size={16} />}
-          </button>
+            {isSettingsOpen && (
+              <div className="absolute right-0 mt-2 w-64 p-3 bg-white border border-[#E2DDD4] rounded-xl shadow-lg space-y-3 z-50 text-xs">
+                
+                {/* AI Model Selection */}
+                <div className="space-y-1">
+                  <span className="text-[11px] font-mono uppercase text-[#6E6A63]">Vision Engine</span>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => onSelectModel(e.target.value)}
+                    className="w-full p-1.5 rounded-md border border-[#E2DDD4] bg-[#F6F3EC] text-[#161616] font-mono text-xs focus:outline-none"
+                  >
+                    <option value="qwen3.5:2b">qwen3.5:2b (Edge AI)</option>
+                    <option value="qwen3-vl:8b">qwen3-vl:8b (Multimodal)</option>
+                  </select>
+                </div>
 
-          {/* Exhibition Judge Brief Button */}
-          <button
-            onClick={onOpenPitchModal}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-white text-xs font-semibold transition-all active:scale-95 min-h-[40px]"
-          >
-            <Info size={15} />
-            <span>Pitch</span>
-          </button>
+                <div className="border-t border-[#E2DDD4] pt-2 space-y-1">
+                  {/* Sound Toggle */}
+                  <button
+                    onClick={handleToggleSound}
+                    className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-[#F6F3EC] text-[#161616]"
+                  >
+                    <span>Sound Audio Feedback</span>
+                    {soundOn ? <SpeakerHigh size={15} /> : <SpeakerSimpleSlash size={15} />}
+                  </button>
+
+                  {/* Kiosk Fullscreen */}
+                  <button
+                    onClick={handleToggleFullscreen}
+                    className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-[#F6F3EC] text-[#161616]"
+                  >
+                    <span>Fullscreen Kiosk Mode</span>
+                    {isFullscreen ? <ArrowsIn size={15} /> : <ArrowsOut size={15} />}
+                  </button>
+
+                  {/* Exhibition Pitch / Info */}
+                  <button
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      onOpenPitchModal();
+                    }}
+                    className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-[#F6F3EC] text-[#161616]"
+                  >
+                    <span>About Exhibition Project</span>
+                    <Info size={15} />
+                  </button>
+                </div>
+
+              </div>
+            )}
+          </div>
 
         </div>
 

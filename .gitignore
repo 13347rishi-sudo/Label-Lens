@@ -35,6 +35,7 @@ $RECYCLE.BIN/
 # Editor directories
 .vscode/
 .idea/
+.commandcode/
 *.suo
 *.ntvs*
 *.njsproj

@@ -1,29 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #090A0E;
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-hover: rgba(255, 255, 255, 0.055);
-  --color-surface-active: rgba(255, 255, 255, 0.08);
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
-  --color-text: #F5F5F7;
-  --color-text-secondary: #A1A1A6;
-  --color-text-tertiary: #6E6E73;
+  --color-bg: #F6F3EC;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #EFECE4;
+  --color-border: #E2DDD4;
+  --color-border-dark: #161616;
+  --color-text: #161616;
+  --color-text-secondary: #6E6A63;
+  --color-text-tertiary: #969188;
 
-  /* Official European Nutri-Score & Apple Semantic Colors */
-  --color-grade-a: #34C759;
-  --color-grade-b: #85D33A;
-  --color-grade-c: #FFCC00;
-  --color-grade-d: #FF9500;
-  --color-grade-e: #FF3B30;
+  /* Official European Nutri-Score Standard Palette */
+  --color-grade-a: #038141;
+  --color-grade-b: #85bb2f;
+  --color-grade-c: #fecb02;
+  --color-grade-d: #ee8100;
+  --color-grade-e: #e63e11;
 
-  /* Apple System Tint */
-  --color-apple-blue: #0A84FF;
-  --color-apple-green: #30D158;
-
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Geist', sans-serif;
-  --font-mono: 'SF Mono', 'Geist Mono', Menlo, Monaco, monospace;
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Monaco, monospace;
 }
 
 * { 
@@ -33,98 +28,65 @@
 }
 
 html { 
-  background-color: #090A0E; 
-  color: #F5F5F7; 
+  background-color: #F6F3EC; 
+  color: #161616; 
   font-family: var(--font-sans); 
-  letter-spacing: -0.011em;
+  letter-spacing: -0.012em;
 }
 
 body { 
   margin: 0; 
   overflow-x: hidden;
-  background-color: #090A0E;
+  background-color: #F6F3EC;
+  color: #161616;
 }
 
-/* Apple Frosted Glass Utilities */
-.apple-glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Editorial Paper Utilities */
+.paper-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2DDD4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
-.apple-glass-card {
-  background: rgba(255, 255, 255, 0.025);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+.hairline {
+  border-color: #E2DDD4;
 }
 
-.apple-glass-card:hover {
-  background: rgba(255, 255, 255, 0.045);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Apple Slider Styling */
+/* Minimalist Range Slider */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  height: 4px;
+  background: #E2DDD4;
   border-radius: 9999px;
   outline: none;
-  transition: background 150ms ease;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #FFFFFF;
+  width: 18px;
+  height: 18px;
+  background: #161616;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 100ms ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
 }
 
 input[type="range"]::-webkit-slider-thumb:active {
   transform: scale(0.95);
 }
 
-/* Sleek Apple Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Scanner HUD Laser Beam Animation */
-@keyframes scanline {
-  0% { transform: translateY(0%); opacity: 0; }
-  15% { opacity: 0.9; }
-  85% { opacity: 0.9; }
-  100% { transform: translateY(260px); opacity: 0; }
-}
-
-.animate-scanline {
-  animation: scanline 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+/* Print/Kiosk Readability Utilities */
+@media (min-width: 1024px) {
+  .kiosk-large {
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
 }

@@ -8,15 +8,24 @@ import { ComparisonArena } from './components/ComparisonArena';
 import { ExhibitionPitchModal } from './components/ExhibitionPitchModal';
 import { HealthierAlternativesCard } from './components/HealthierAlternativesCard';
 
-import { EXHIBITION_PRODUCTS } from './lib/database';
+import { EXHIBITION_PRODUCTS, findProductById } from './lib/database';
 import { scoreProduct } from './lib/scoring';
 import { analyzeIngredients } from './lib/knowledge';
 import { applyHealthProfile, HEALTH_PROFILES } from './lib/profiles';
 import type { HealthProfileId, ProductItem, Per100g } from './lib/types';
 import { TRANSLATIONS, type Language } from './lib/i18n';
-import { Camera, Scales, SlidersHorizontal, CaretDown, CaretUp, ArrowCounterClockwise } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, ArrowCounterClockwise } from '@phosphor-icons/react';
 
 type TabType = 'overview' | 'duel';
+
+// 5 Familiar Indian benchmark foods for instant 1-tap testing at kiosk
+const QUICK_BENCHMARKS = [
+  { id: 'prod_maggi', name: 'Maggi' },
+  { id: 'prod_parleg', name: 'Parle-G' },
+  { id: 'prod_frooti', name: 'Frooti' },
+  { id: 'prod_amul_butter', name: 'Amul Butter' },
+  { id: 'prod_coke', name: 'Coca-Cola' }
+];
 
 export function App() {
   const [language, setLanguage] = useState<Language>('en');
@@ -38,6 +47,14 @@ export function App() {
     setLiveNutrition({ ...prod.per_100g });
     lastActivityRef.current = Date.now();
   }, []);
+
+  // Quick benchmark select
+  const handleSelectQuick = (id: string) => {
+    const found = findProductById(id);
+    if (found) {
+      handleSelectProduct(found);
+    }
+  };
 
   // Profile selection
   const handleSelectProfile = (id: HealthProfileId) => {
@@ -100,9 +117,9 @@ export function App() {
   const activeProfileData = HEALTH_PROFILES.find((p) => p.id === activeProfile) || HEALTH_PROFILES[0];
 
   return (
-    <div className="min-h-screen bg-[#090A0E] text-[#F5F5F7] font-sans antialiased selection:bg-white/20">
+    <div className="min-h-screen bg-[#F6F3EC] text-[#161616] font-sans antialiased selection:bg-[#161616] selection:text-[#F6F3EC]">
       
-      {/* Kiosk Translucent Navigation Bar */}
+      {/* Navigation Bar */}
       <Navbar
         activeProfile={activeProfile}
         onSelectProfile={handleSelectProfile}
@@ -115,50 +132,48 @@ export function App() {
 
       {/* Subtle Idle Reset Notification */}
       {idleResetNotice && (
-        <div className="fixed top-18 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-white/90 text-black text-xs sm:text-sm font-bold shadow-2xl flex items-center gap-2 animate-bounce">
-          <ArrowCounterClockwise size={16} />
+        <div className="fixed top-18 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[#161616] text-[#F6F3EC] text-xs font-semibold shadow-md flex items-center gap-2">
+          <ArrowCounterClockwise size={14} />
           <span>{t.idleNotice}</span>
         </div>
       )}
 
       {/* Main Content Container with Macro-Whitespace */}
-      <main className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-7">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         
         {/* Segmented View Switcher: Scan & Analysis vs Compare Foods */}
-        <div className="w-full flex items-center justify-center py-1 px-1">
-          <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-sm">
+        <div className="w-full flex items-center justify-center">
+          <div className="inline-flex p-1 rounded-xl bg-[#EFECE4] border border-[#E2DDD4]">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 min-h-[44px] ${
+              className={`px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'overview'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
+                  ? 'bg-[#161616] text-[#F6F3EC] shadow-xs'
+                  : 'text-[#6E6A63] hover:text-[#161616]'
               }`}
             >
-              <Camera size={18} />
-              <span>{t.scanAnalysisTab}</span>
+              {t.scanAnalysisTab}
             </button>
 
             <button
               onClick={() => setActiveTab('duel')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 min-h-[44px] ${
+              className={`px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'duel'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
+                  ? 'bg-[#161616] text-[#F6F3EC] shadow-xs'
+                  : 'text-[#6E6A63] hover:text-[#161616]'
               }`}
             >
-              <Scales size={18} />
-              <span>{t.compareFoodsTab}</span>
+              {t.compareFoodsTab}
             </button>
           </div>
         </div>
 
-        {/* Tab 1: One-Screen Kiosk Scan & Result Flow */}
+        {/* Tab 1: One-Screen Scan & Result Flow */}
         {activeTab === 'overview' && (
-          <div className="space-y-7 animate-fadeIn">
+          <div className="space-y-6 sm:space-y-8">
             
             {/* Top Row: Camera Viewfinder */}
-            <div className="w-full max-w-3xl mx-auto">
+            <div>
               <ScannerHUD
                 onProductResolved={handleSelectProduct}
                 selectedModel={selectedModel}
@@ -166,7 +181,25 @@ export function App() {
               />
             </div>
 
-            {/* Result Card First (Giant Grade Letter + 1-10 Score + Top 3 Findings) */}
+            {/* Quick 1-Tap Demo Row for Exhibition Visitors (Zero-Camera Setup) */}
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+              <span className="text-[#6E6A63] font-mono mr-1">Quick test:</span>
+              {QUICK_BENCHMARKS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleSelectQuick(item.id)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                    currentProduct.id === item.id
+                      ? 'bg-[#161616] text-[#F6F3EC] border-[#161616]'
+                      : 'bg-white hover:bg-[#EFECE4] border-[#E2DDD4] text-[#161616]'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Result Card First (Giant Grade Letter + Product Name + One Plain Sentence) */}
             <VerdictCard
               product={currentProduct}
               scoringResult={scoringResult}
@@ -190,21 +223,18 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => setShowAdvancedTools(!showAdvancedTools)}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-xs sm:text-sm font-bold text-zinc-200 transition-all active:scale-98 min-h-[52px]"
+                  className="w-full flex items-center justify-between p-4 rounded-xl bg-white hover:bg-[#EFECE4] border border-[#E2DDD4] text-xs sm:text-sm font-semibold text-[#161616] transition-all shadow-xs"
                 >
-                  <span className="flex items-center gap-2.5">
-                    <SlidersHorizontal size={20} className="text-sky-400" />
-                    <span>{showAdvancedTools ? t.hideAdvanced : t.exploreAdvanced}</span>
-                  </span>
-                  <div className="flex items-center gap-2 text-zinc-400 text-xs">
+                  <span>{showAdvancedTools ? t.hideAdvanced : t.exploreAdvanced}</span>
+                  <div className="flex items-center gap-1.5 text-[#6E6A63] text-xs">
                     <span>{showAdvancedTools ? 'Collapse' : 'Expand'}</span>
-                    {showAdvancedTools ? <CaretUp size={16} /> : <CaretDown size={16} />}
+                    {showAdvancedTools ? <CaretUp size={14} /> : <CaretDown size={14} />}
                   </div>
                 </button>
 
                 {/* Expanded Deep Ingredients & Reformulation Sliders */}
                 {showAdvancedTools && (
-                  <div className="space-y-6 pt-5 animate-fadeIn">
+                  <div className="space-y-6 pt-5">
                     <ChemicalInspector
                       ingredients={currentProduct.ingredients}
                       knowledge={knowledgeResult}
@@ -227,7 +257,7 @@ export function App() {
 
         {/* Tab 2: Side-by-Side Product Duel */}
         {activeTab === 'duel' && (
-          <div className="animate-fadeIn">
+          <div>
             <ComparisonArena />
           </div>
         )}
@@ -240,10 +270,9 @@ export function App() {
         onClose={() => setIsPitchModalOpen(false)}
       />
 
-      {/* Clean Exhibition Kiosk Footer (Zero Clutter) */}
-      <footer className="w-full border-t border-white/[0.06] py-8 px-6 mt-16 text-center text-xs text-zinc-400 space-y-1">
-        <p className="font-semibold text-zinc-300">LabelLens · Science Exhibition 2026 · Local Multimodal Vision & Nutri-Score Analysis</p>
-        <p className="text-[11px] text-zinc-500">Built for public education and nutritional transparency. Informational tool — not medical advice.</p>
+      {/* Clean Exhibition Footer: One Quiet Line */}
+      <footer className="w-full border-t border-[#E2DDD4] py-8 px-6 mt-16 text-center text-xs text-[#6E6A63]">
+        <p>{t.disclaimer}</p>
       </footer>
 
     </div>

@@ -1,14 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Camera,
-  Barcode,
   UploadSimple,
   MagnifyingGlass,
   CircleNotch,
   Aperture,
   DeviceMobileCamera,
-  Globe,
-  ShieldCheck,
   WarningCircle
 } from '@phosphor-icons/react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
@@ -37,6 +34,7 @@ export function ScannerHUD({
 }: ScannerHUDProps) {
   const [hudTab, setHudTab] = useState<'camera' | 'upload' | 'barcode'>('camera');
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraMode, setCameraMode] = useState<'barcode' | 'vision'>('barcode');
   const [manualCode, setManualCode] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -65,7 +63,7 @@ export function ScannerHUD({
       zxingReaderRef.current = null;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current.getTracks().forEach((trk) => trk.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -82,7 +80,7 @@ export function ScannerHUD({
     }
     const stepInterval = setInterval(() => {
       setScanStep((prev) => (prev < 3 ? prev + 1 : 0));
-    }, 750);
+    }, 700);
     return () => clearInterval(stepInterval);
   }, [isScanning]);
 
@@ -108,10 +106,10 @@ export function ScannerHUD({
       if (product) {
         if (product.is_food === false) {
           playAlertBuzzer();
-          setFriendlyError(`Non-food item recognized (${product.product_name}). Please scan edible food packaging.`);
+          setFriendlyError(`Non-food item recognized (${product.product_name}). Please scan food packaging.`);
         } else {
           playSuccessChime();
-          setScanStatus(`Found: ${product.product_name} (${product.brand})`);
+          setScanStatus(`Found: ${product.product_name}`);
           onProductResolved(product);
         }
       } else {
@@ -150,7 +148,7 @@ export function ScannerHUD({
       }
 
       setCameraActive(true);
-      setScanStatus('Center barcode inside frame to scan');
+      setScanStatus('Ready to scan');
 
       const codeReader = getOptimizedZxingReader();
       zxingReaderRef.current = codeReader;
@@ -200,7 +198,7 @@ export function ScannerHUD({
               }
             }
           } catch {
-            // Native detector frame failed, zxing fallback catches
+            // Fallback handled by zxing
           }
         }, 150);
 
@@ -223,7 +221,7 @@ export function ScannerHUD({
     try {
       const detectedText = await scanImageFileWithAllEngines(file);
       if (detectedText) {
-        setScanStatus(`Barcode Detected: ${detectedText}`);
+        setScanStatus(`Barcode: ${detectedText}`);
         await handleBarcodeScanned(detectedText);
         return;
       }
@@ -238,13 +236,13 @@ export function ScannerHUD({
       if (isUp) {
         const aiProduct = await extractNutritionWithOllama(file, selectedModel);
         playSuccessChime();
-        setScanStatus(`Found: ${aiProduct.product_name} (${aiProduct.brand})`);
+        setScanStatus(`Found: ${aiProduct.product_name}`);
         onProductResolved(aiProduct);
         setIsScanning(false);
         return;
       }
     } catch (aiErr) {
-      console.warn('Vision AI fallback error:', aiErr);
+      console.warn('Vision fallback error:', aiErr);
     }
 
     setIsScanning(false);
@@ -253,7 +251,7 @@ export function ScannerHUD({
   };
 
   // Capture frame from video and analyze
-  const captureAndAnalyze = async (forceVisionAi = false) => {
+  const captureAndAnalyze = async (forceVision = false) => {
     const video = videoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setFriendlyError(t.errors.blurry);
@@ -272,7 +270,7 @@ export function ScannerHUD({
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        if (!forceVisionAi) {
+        if (!forceVision) {
           setScanStatus(t.steps.reading);
           const detectedText = await scanCanvasWithAllEngines(canvas);
           if (detectedText) {
@@ -286,16 +284,16 @@ export function ScannerHUD({
         if (isUp) {
           const aiProduct = await extractNutritionWithOllama(canvas, selectedModel);
           playSuccessChime();
-          setScanStatus(`Found: ${aiProduct.product_name} (${aiProduct.brand})`);
+          setScanStatus(`Found: ${aiProduct.product_name}`);
           onProductResolved(aiProduct);
           setIsScanning(false);
           return;
         } else {
-          setFriendlyError('Local AI vision engine (Ollama) is not running. Using offline barcode catalog.');
+          setFriendlyError('Vision model not found on local machine. Using offline catalog.');
         }
       }
     } catch (err) {
-      console.warn('Capture & analyze error:', err);
+      console.warn('Capture error:', err);
     }
 
     setIsScanning(false);
@@ -311,9 +309,9 @@ export function ScannerHUD({
   ];
 
   return (
-    <div className="w-full rounded-3xl apple-glass p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between border border-white/[0.08] shadow-2xl">
+    <div className="w-full bg-white border border-[#E2DDD4] rounded-2xl p-5 sm:p-7 shadow-xs">
       
-      {/* Hidden Native Phone Camera Input */}
+      {/* Hidden File Input for Mobile/Tablet Camera */}
       <input
         ref={nativeCameraInputRef}
         type="file"
@@ -327,180 +325,178 @@ export function ScannerHUD({
         }}
       />
 
-      {/* Top Controls: Mode Switcher & Offline Status */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        
-        {/* Mode Selector */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+      {/* Underlined Tab Row */}
+      <div className="flex items-center justify-between border-b border-[#E2DDD4] pb-2 mb-5">
+        <div className="flex items-center gap-6 text-sm">
           <button
             onClick={() => { setHudTab('camera'); if (!cameraActive) startCamera(); }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
+            className={`transition-all font-medium pb-2 -mb-2 border-b-2 ${
               hudTab === 'camera'
-                ? 'bg-white text-black shadow-sm font-bold'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border-[#161616] text-[#161616] font-bold'
+                : 'border-transparent text-[#6E6A63] hover:text-[#161616]'
             }`}
           >
-            <Camera size={16} />
-            <span>{language === 'en' ? 'Camera' : 'कैमरा'}</span>
+            {language === 'en' ? 'Camera' : 'कैमरा'}
           </button>
+
           <button
             onClick={() => { setHudTab('upload'); stopCamera(); }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
+            className={`transition-all font-medium pb-2 -mb-2 border-b-2 ${
               hudTab === 'upload'
-                ? 'bg-white text-black shadow-sm font-bold'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border-[#161616] text-[#161616] font-bold'
+                : 'border-transparent text-[#6E6A63] hover:text-[#161616]'
             }`}
           >
-            <UploadSimple size={16} />
-            <span>{language === 'en' ? 'Upload Photo' : 'फोटो अपलोड'}</span>
+            {language === 'en' ? 'Upload Photo' : 'फोटो अपलोड'}
           </button>
+
           <button
             onClick={() => { setHudTab('barcode'); stopCamera(); }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all min-h-[40px] ${
+            className={`transition-all font-medium pb-2 -mb-2 border-b-2 ${
               hudTab === 'barcode'
-                ? 'bg-white text-black shadow-sm font-bold'
-                : 'text-zinc-400 hover:text-white'
+                ? 'border-[#161616] text-[#161616] font-bold'
+                : 'border-transparent text-[#6E6A63] hover:text-[#161616]'
             }`}
           >
-            <Barcode size={16} />
-            <span>{language === 'en' ? 'Type Barcode' : 'बारकोड दर्ज करें'}</span>
+            {language === 'en' ? 'Type Barcode' : 'बारकोड दर्ज करें'}
           </button>
         </div>
 
-        {/* Offline Ready Badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>{t.offlineBadge}</span>
+        {/* Small Offline Status Dot */}
+        <div className="flex items-center gap-1.5 text-xs text-[#6E6A63] font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#038141]" />
+          <span>115+ offline</span>
         </div>
-
       </div>
 
       {/* Main Viewport */}
       {hudTab === 'camera' ? (
-        <div className={`relative w-full aspect-[4/3] rounded-2xl bg-black overflow-hidden flex items-center justify-center border transition-all duration-300 ${
-          justScanned ? 'border-emerald-400 shadow-[0_0_40px_rgba(52,199,89,0.4)]' : 'border-white/[0.1]'
-        }`}>
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            className={`w-full h-full object-cover transition-opacity duration-300 ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
-          />
+        <div className="space-y-4">
+          
+          {/* Camera Frame (Full Bleed Clean Border) */}
+          <div className={`relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-xl bg-[#F6F3EC] overflow-hidden flex items-center justify-center border transition-all duration-300 ${
+            justScanned ? 'border-[#038141] ring-2 ring-[#038141]/20' : 'border-[#E2DDD4]'
+          }`}>
+            
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              className={`w-full h-full object-cover transition-opacity duration-200 ${
+                cameraActive ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
 
-          {/* Inactive State: Giant Kiosk Scan CTA Button (Readable from 1 Metre) */}
-          {!cameraActive && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 bg-neutral-950/85 backdrop-blur-md">
-              <div className="w-16 h-16 rounded-3xl bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-white shadow-xl">
-                <Camera size={32} />
+            {/* Inactive State: Clean, Big Shutter Call-To-Action */}
+            {!cameraActive && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 bg-[#F6F3EC]">
+                <div className="w-16 h-16 rounded-full bg-white border border-[#E2DDD4] flex items-center justify-center text-[#161616] shadow-xs">
+                  <Camera size={28} />
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#161616] tracking-tight">
+                    {t.scanPacketBtn}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#6E6A63] max-w-sm">
+                    {t.scanOrTap}
+                  </p>
+                </div>
+
+                {/* Big Shutter Buttons (At least 56px tall for 1.5m exhibition kiosk) */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md pt-2">
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="w-full sm:flex-1 h-14 rounded-xl bg-[#161616] hover:bg-black text-[#F6F3EC] font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all active:scale-98 shadow-xs"
+                  >
+                    <Camera size={20} />
+                    <span>{language === 'en' ? 'Open Camera' : 'कैमरा खोलें'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => nativeCameraInputRef.current?.click()}
+                    className="w-full sm:flex-1 h-14 rounded-xl bg-white hover:bg-[#EFECE4] border border-[#E2DDD4] text-[#161616] font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all active:scale-98 shadow-xs"
+                  >
+                    <DeviceMobileCamera size={20} />
+                    <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
+                  </button>
+                </div>
               </div>
+            )}
 
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  {t.scanPacketBtn}
-                </h3>
-                <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-sm">
-                  {t.scanOrTap}
-                </p>
-              </div>
-
-              {/* Giant 56px Tall Scan Actions */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md pt-2">
-                <button
-                  type="button"
-                  onClick={startCamera}
-                  className="w-full sm:flex-1 h-14 rounded-2xl bg-white hover:bg-zinc-200 text-black font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl"
-                >
-                  <Camera size={22} weight="bold" />
-                  <span>{language === 'en' ? 'Open Camera' : 'कैमरा खोलें'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => nativeCameraInputRef.current?.click()}
-                  className="w-full sm:flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl"
-                >
-                  <DeviceMobileCamera size={22} weight="bold" />
-                  <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Active Viewfinder Overlays */}
-          {cameraActive && (
-            <>
-              {/* Scanline */}
-              <div className="absolute inset-x-8 top-12 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent pointer-events-none animate-scanline shadow-[0_0_14px_rgba(52,199,89,1)]" />
-
-              {/* Reticle Brackets */}
+            {/* Active Camera Corner Reticles (Thin Crisp Brackets, No Glow) */}
+            {cameraActive && (
               <div className="absolute inset-8 pointer-events-none">
-                <div className={`absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 rounded-tl-xl transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/80'
-                }`} />
-                <div className={`absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 rounded-tr-xl transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/80'
-                }`} />
-                <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 rounded-bl-xl transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/80'
-                }`} />
-                <div className={`absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 rounded-br-xl transition-colors ${
-                  justScanned ? 'border-emerald-400' : 'border-white/80'
-                }`} />
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#161616]" />
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#161616]" />
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#161616]" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#161616]" />
               </div>
+            )}
 
-              {/* Active Camera Action Controls */}
-              <div className="absolute bottom-5 left-0 right-0 flex flex-wrap justify-center items-center gap-3 px-4">
-                <button
-                  type="button"
-                  onClick={() => captureAndAnalyze(false)}
-                  disabled={isScanning}
-                  className="px-5 py-3 rounded-full bg-white text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
-                >
-                  <Aperture size={20} weight="bold" />
-                  <span>{language === 'en' ? 'Scan Barcode' : 'बारकोड स्कैन करें'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => captureAndAnalyze(true)}
-                  disabled={isScanning}
-                  className="px-5 py-3 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95 disabled:opacity-50 min-h-[48px]"
-                >
-                  <Aperture size={18} weight="bold" />
-                  <span>{language === 'en' ? 'Read Label (AI Vision)' : 'लेबल पढ़ें (AI विजन)'}</span>
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Loading Stepper Overlay (Meaningful 4-Stage Progress) */}
-          {isScanning && (
-            <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 space-y-4 animate-fadeIn">
-              <CircleNotch size={40} className="animate-spin text-emerald-400" />
-              <div className="space-y-1">
-                <div className="text-lg sm:text-xl font-bold text-white">
+            {/* Loading Stepper Overlay */}
+            {isScanning && (
+              <div className="absolute inset-0 bg-[#F6F3EC]/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center z-30 space-y-3">
+                <CircleNotch size={32} className="animate-spin text-[#161616]" />
+                <div className="text-base font-bold text-[#161616]">
                   {stepLabels[scanStep]}
                 </div>
-                <div className="text-xs text-zinc-400">
-                  {language === 'en' ? 'Processing locally on edge hardware...' : 'लैपटॉप पर प्रोसेस हो रहा है...'}
+                <div className="text-xs text-[#6E6A63] font-mono">
+                  {language === 'en' ? 'Processing on local device...' : 'डिवाइस पर प्रोसेस हो रहा है...'}
                 </div>
               </div>
+            )}
 
-              {/* Stepper Progress Dots */}
-              <div className="flex items-center gap-2 pt-2">
-                {[0, 1, 2, 3].map((stepIdx) => (
-                  <div
-                    key={stepIdx}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      stepIdx === scanStep 
-                        ? 'w-8 bg-emerald-400' 
-                        : stepIdx < scanStep 
-                        ? 'w-2 bg-emerald-700' 
-                        : 'w-2 bg-white/20'
-                    }`}
-                  />
-                ))}
+          </div>
+
+          {/* Active Camera Shutter & Mode Bar */}
+          {cameraActive && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              
+              {/* Two-Segment Control: Scan Barcode vs Read Label */}
+              <div className="inline-flex p-1 rounded-xl bg-[#EFECE4] border border-[#E2DDD4]">
+                <button
+                  type="button"
+                  onClick={() => setCameraMode('barcode')}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    cameraMode === 'barcode'
+                      ? 'bg-[#161616] text-[#F6F3EC] shadow-xs'
+                      : 'text-[#6E6A63] hover:text-[#161616]'
+                  }`}
+                >
+                  {language === 'en' ? 'Scan Barcode' : 'बारकोड स्कैन'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCameraMode('vision')}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    cameraMode === 'vision'
+                      ? 'bg-[#161616] text-[#F6F3EC] shadow-xs'
+                      : 'text-[#6E6A63] hover:text-[#161616]'
+                  }`}
+                >
+                  {language === 'en' ? 'Read Label (AI Vision)' : 'लेबल पढ़ें (विजन)'}
+                </button>
               </div>
+
+              {/* Big Shutter Button */}
+              <button
+                type="button"
+                onClick={() => captureAndAnalyze(cameraMode === 'vision')}
+                disabled={isScanning}
+                className="w-full sm:w-auto h-12 px-6 rounded-xl bg-[#161616] hover:bg-black text-[#F6F3EC] font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50 shadow-xs"
+              >
+                <Aperture size={18} />
+                <span>
+                  {cameraMode === 'vision'
+                    ? (language === 'en' ? 'Read Packaging Label' : 'लेबल विश्लेषण करें')
+                    : (language === 'en' ? 'Capture Barcode' : 'बारकोड कैप्चर करें')}
+                </span>
+              </button>
+
             </div>
           )}
 
@@ -514,25 +510,29 @@ export function ScannerHUD({
             setDragOver(false);
             if (e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0]);
           }}
-          className={`w-full aspect-[4/3] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-6 text-center transition-all ${
-            dragOver ? 'border-emerald-400 bg-emerald-500/10' : 'border-white/15 bg-white/[0.02] hover:bg-white/[0.04]'
+          className={`w-full aspect-[16/10] sm:aspect-[16/9] rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-6 text-center transition-all ${
+            dragOver ? 'border-[#161616] bg-[#EFECE4]' : 'border-[#E2DDD4] bg-[#F6F3EC] hover:bg-[#EFECE4]'
           }`}
         >
-          <UploadSimple size={44} className="text-zinc-300 mb-3" />
-          <p className="text-base font-bold text-white">{language === 'en' ? 'Drop food packet image here' : 'पैकेट की फोटो यहाँ डालें'}</p>
-          <p className="text-xs text-zinc-400 mt-1 max-w-xs">{language === 'en' ? 'Upload a photo of the barcode or nutrition table.' : 'बारकोड या सामग्री तालिका की फोटो चुनें।'}</p>
+          <UploadSimple size={36} className="text-[#6E6A63] mb-2" />
+          <p className="text-base font-bold text-[#161616]">
+            {language === 'en' ? 'Drop food packet image here' : 'पैकेट की फोटो यहाँ डालें'}
+          </p>
+          <p className="text-xs text-[#6E6A63] mt-1 max-w-xs">
+            {language === 'en' ? 'Upload a photo of the barcode or nutrition table.' : 'बारकोड या सामग्री तालिका की फोटो चुनें।'}
+          </p>
 
-          <div className="flex items-center gap-3 mt-5">
+          <div className="flex items-center gap-3 mt-4">
             <button
               type="button"
               onClick={() => nativeCameraInputRef.current?.click()}
-              className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black text-sm font-bold flex items-center gap-2 min-h-[48px]"
+              className="px-5 py-2.5 rounded-xl bg-[#161616] hover:bg-black text-[#F6F3EC] text-xs font-bold flex items-center gap-2 shadow-xs"
             >
-              <DeviceMobileCamera size={20} weight="bold" />
+              <DeviceMobileCamera size={16} />
               <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
             </button>
 
-            <label className="px-5 py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-semibold text-white cursor-pointer min-h-[48px] flex items-center">
+            <label className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#EFECE4] border border-[#E2DDD4] text-xs font-semibold text-[#161616] cursor-pointer shadow-xs flex items-center">
               {language === 'en' ? 'Select File' : 'फाइल चुनें'}
               <input
                 type="file"
@@ -546,11 +546,12 @@ export function ScannerHUD({
           </div>
         </div>
       ) : (
-        <div className="w-full aspect-[4/3] rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 flex flex-col items-center justify-center text-center space-y-3">
-          <Globe size={36} className="text-sky-400" />
-          <p className="text-base sm:text-lg font-bold text-white">{language === 'en' ? 'Search Food or Enter Barcode' : 'खाद्य पदार्थ खोजें या बारकोड डालें'}</p>
-          <p className="text-xs text-zinc-400 max-w-sm">
-            {language === 'en' ? 'Type a product name (e.g. Maggi, Coke, Amul) or a barcode number.' : 'उत्पाद का नाम या बारकोड नंबर दर्ज करें।'}
+        <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] p-6 flex flex-col items-center justify-center text-center space-y-3">
+          <p className="text-base font-bold text-[#161616]">
+            {language === 'en' ? 'Search Food or Enter Barcode' : 'खाद्य पदार्थ खोजें या बारकोड डालें'}
+          </p>
+          <p className="text-xs text-[#6E6A63] max-w-sm">
+            {language === 'en' ? 'Type a product name (e.g. Maggi, Coke, Frooti) or barcode.' : 'उत्पाद का नाम या बारकोड नंबर दर्ज करें।'}
           </p>
           
           <form
@@ -558,68 +559,67 @@ export function ScannerHUD({
               e.preventDefault();
               if (manualCode.trim()) handleBarcodeScanned(manualCode);
             }}
-            className="w-full max-w-sm flex gap-2 pt-2"
+            className="w-full max-w-sm flex gap-2 pt-1"
           >
             <input
               type="text"
               placeholder="e.g. Maggi, Coke, 8901058852318"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/30"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-[#E2DDD4] text-xs sm:text-sm text-[#161616] placeholder-[#969188] focus:outline-none focus:border-[#161616]"
             />
             <button
               type="submit"
               disabled={isScanning || !manualCode.trim()}
-              className="px-5 py-3 rounded-xl bg-white text-black font-bold text-sm min-h-[48px] flex items-center justify-center"
+              className="px-4 py-2.5 rounded-xl bg-[#161616] hover:bg-black text-[#F6F3EC] font-bold text-xs flex items-center justify-center shadow-xs"
             >
-              {isScanning ? <CircleNotch size={18} className="animate-spin" /> : <MagnifyingGlass size={18} weight="bold" />}
+              {isScanning ? <CircleNotch size={16} className="animate-spin" /> : <MagnifyingGlass size={16} />}
             </button>
           </form>
 
-          <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs text-zinc-400">
+          {/* Quick shortcuts */}
+          <div className="flex flex-wrap justify-center gap-2 pt-2 text-xs text-[#6E6A63]">
             <span>Quick:</span>
-            <button type="button" onClick={() => handleBarcodeScanned('8901058852318')} className="underline hover:text-white">Maggi</button>
+            <button type="button" onClick={() => handleBarcodeScanned('8901058852318')} className="underline hover:text-[#161616]">Maggi</button>
             <span>·</span>
-            <button type="button" onClick={() => handleBarcodeScanned('5449000000996')} className="underline hover:text-white">Coca-Cola</button>
+            <button type="button" onClick={() => handleBarcodeScanned('5449000000996')} className="underline hover:text-[#161616]">Coca-Cola</button>
             <span>·</span>
-            <button type="button" onClick={() => handleBarcodeScanned('8901491101837')} className="underline hover:text-white">Lay's</button>
+            <button type="button" onClick={() => handleBarcodeScanned('8901725131234')} className="underline hover:text-[#161616]">Frooti</button>
             <span>·</span>
-            <button type="button" onClick={() => handleBarcodeScanned('8901262010047')} className="underline hover:text-white">Amul Butter</button>
+            <button type="button" onClick={() => handleBarcodeScanned('8901262010015')} className="underline hover:text-[#161616]">Amul Butter</button>
+            <span>·</span>
+            <button type="button" onClick={() => handleBarcodeScanned('8901719101038')} className="underline hover:text-[#161616]">Parle-G</button>
           </div>
-        </div>
-      )}
-
-      {/* Friendly Error Banner */}
-      {friendlyError && (
-        <div className="mt-3 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex items-start gap-2.5">
-          <WarningCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
-          <span>{friendlyError}</span>
         </div>
       )}
 
       {/* Status Notice */}
       {scanStatus && !friendlyError && !isScanning && (
-        <div className="mt-3 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-xs sm:text-sm text-zinc-300 flex items-center gap-2">
-          <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+        <div className="mt-3 p-2.5 rounded-lg bg-[#EFECE4] text-xs font-mono text-[#161616] flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#038141]" />
           <span>{scanStatus}</span>
         </div>
       )}
 
+      {/* Friendly Error Banner */}
+      {friendlyError && (
+        <div className="mt-4 p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2">
+          <WarningCircle size={16} className="text-[#D97706] shrink-0 mt-0.5" />
+          <span>{friendlyError}</span>
+        </div>
+      )}
+
       {/* Trust Strip */}
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
-        <span className="flex items-center gap-1.5 text-zinc-300">
-          <ShieldCheck size={16} className="text-emerald-400" />
+      <div className="mt-4 pt-3 border-t border-[#E2DDD4] flex items-center justify-between text-xs text-[#6E6A63]">
+        <span className="flex items-center gap-1.5 font-mono text-[11px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#038141]" />
           <span>{t.trustStrip}</span>
         </span>
+
         <button
           type="button"
           onClick={() => setAllowOnlineFallback(!allowOnlineFallback)}
-          className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
-            allowOnlineFallback 
-              ? 'bg-sky-500/20 text-sky-300 border-sky-500/30 font-semibold' 
-              : 'text-zinc-500 border-white/[0.06] hover:text-zinc-300'
-          }`}
-          title="Toggle online Open Food Facts lookup when exhibition Wi-Fi is active"
+          className="text-[11px] font-mono text-[#6E6A63] hover:text-[#161616] underline"
         >
           {allowOnlineFallback ? 'Online Fallback ON' : 'Wi-Fi Fallback OFF'}
         </button>

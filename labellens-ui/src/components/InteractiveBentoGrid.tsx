@@ -41,24 +41,17 @@ export function InteractiveBentoGrid({
     onNutritionChange(initialNutrition);
   };
 
-  const getTrafficColor = (val: number | null, low: number, high: number) => {
-    if (val === null || val === undefined) return { text: 'text-zinc-400', badge: 'bg-zinc-500/10 text-zinc-400' };
-    if (val <= low) return { text: 'text-emerald-400', badge: 'bg-emerald-500/10 text-emerald-400' };
-    if (val <= high) return { text: 'text-amber-400', badge: 'bg-amber-500/10 text-amber-400' };
-    return { text: 'text-red-400', badge: 'bg-red-500/10 text-red-400' };
-  };
-
   return (
-    <div className="w-full rounded-3xl apple-glass p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
+    <div className="w-full bg-white border border-[#E2DDD4] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
       
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E2DDD4]">
         <div>
-          <h3 className="text-base font-semibold text-white">
-            Nutrition per 100g
+          <h3 className="text-lg sm:text-xl font-bold text-[#161616] tracking-tight">
+            Nutrition Reformulation per 100g
           </h3>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Standard amounts per 100g (or 100ml for drinks)
+          <p className="text-xs text-[#6E6A63] mt-0.5">
+            Test how reducing sugar or salt improves the Nutri-Score in real time
           </p>
         </div>
 
@@ -66,10 +59,10 @@ export function InteractiveBentoGrid({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSliders(!showSliders)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               showSliders
-                ? 'bg-white text-black shadow-sm font-semibold'
-                : 'bg-white/[0.04] text-zinc-300 hover:text-white border border-white/[0.06]'
+                ? 'bg-[#161616] text-[#F6F3EC]'
+                : 'bg-[#F6F3EC] text-[#161616] border border-[#E2DDD4] hover:bg-[#EFECE4]'
             }`}
           >
             <Sliders size={14} />
@@ -80,21 +73,21 @@ export function InteractiveBentoGrid({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => applyPreset('zero_sugar')}
-                className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-300 transition-all border border-white/[0.06]"
+                className="px-2.5 py-1.5 rounded-lg bg-[#F6F3EC] hover:bg-[#EFECE4] border border-[#E2DDD4] text-xs font-medium text-[#161616]"
               >
                 Zero Sugar
               </button>
               <button
                 onClick={() => applyPreset('low_salt')}
-                className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-300 transition-all border border-white/[0.06]"
+                className="px-2.5 py-1.5 rounded-lg bg-[#F6F3EC] hover:bg-[#EFECE4] border border-[#E2DDD4] text-xs font-medium text-[#161616]"
               >
                 Low Salt
               </button>
               {reformulationActive && (
                 <button
                   onClick={handleReset}
-                  title="Reset to original packaging values"
-                  className="p-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-xs text-white"
+                  title="Reset to original values"
+                  className="p-1.5 rounded-lg bg-[#F6F3EC] hover:bg-[#EFECE4] border border-[#E2DDD4] text-xs text-[#161616]"
                 >
                   <ArrowCounterClockwise size={14} />
                 </button>
@@ -104,206 +97,90 @@ export function InteractiveBentoGrid({
         </div>
       </div>
 
-      {/* Apple Health Metric Bento Grid */}
+      {/* 4 Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         
         {/* 1. Energy */}
-        <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>Energy</span>
-            <span className="font-mono text-[11px]">
-              {Math.round((nutrition.energy_kj ?? 0) / 4.184)} kcal
+        <div className="p-4 rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] flex flex-col justify-between">
+          <span className="text-xs font-mono text-[#6E6A63] uppercase">Energy</span>
+          <div className="my-2">
+            <span className="text-2xl font-black font-mono text-[#161616]">
+              {Math.round((nutrition.energy_kj ?? 0) / 4.184)}
             </span>
+            <span className="text-xs text-[#6E6A63] ml-1">kcal</span>
           </div>
-          <div className="my-3">
-            <span className="text-2xl font-bold text-white tracking-tight">
-              {Math.round(nutrition.energy_kj ?? 0)}
-            </span>
-            <span className="text-xs text-zinc-400 ml-1">kJ</span>
-          </div>
-          <span className="text-[11px] text-zinc-500">
-            {isBeverage ? 'Beverage scale' : 'General food scale'}
+          <span className="text-[11px] text-[#6E6A63] font-mono">
+            {isBeverage ? 'Drink scale' : 'Food scale'}
           </span>
         </div>
 
         {/* 2. Sugars */}
-        {(() => {
-          const sug = nutrition.sugars_g ?? 0;
-          const tf = getTrafficColor(sug, 5, isBeverage ? 7 : 12.5);
-          return (
-            <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Sugars</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${tf.badge}`}>
-                  {sug <= 5 ? 'Low' : sug <= 12.5 ? 'Moderate' : 'High'}
-                </span>
-              </div>
-              <div className="my-3">
-                <span className={`text-2xl font-bold tracking-tight ${tf.text}`}>
-                  {sug.toFixed(1)}
-                </span>
-                <span className="text-xs text-zinc-400 ml-1">g</span>
-              </div>
-              {showSliders ? (
-                <input
-                  type="range"
-                  min="0"
-                  max="60"
-                  step="0.5"
-                  value={sug}
-                  onChange={(e) => updateValue('sugars_g', parseFloat(e.target.value))}
-                />
-              ) : (
-                <span className="text-[11px] text-zinc-500">Simple & added sugars</span>
-              )}
-            </div>
-          );
-        })()}
+        <div className="p-4 rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] flex flex-col justify-between">
+          <span className="text-xs font-mono text-[#6E6A63] uppercase">Sugars</span>
+          <div className="my-2">
+            <span className="text-2xl font-black font-mono text-[#161616]">
+              {(nutrition.sugars_g ?? 0).toFixed(1)}
+            </span>
+            <span className="text-xs text-[#6E6A63] ml-1">g</span>
+          </div>
+          {showSliders ? (
+            <input
+              type="range"
+              min="0"
+              max="60"
+              step="0.5"
+              value={nutrition.sugars_g ?? 0}
+              onChange={(e) => updateValue('sugars_g', parseFloat(e.target.value))}
+            />
+          ) : (
+            <span className="text-[11px] text-[#6E6A63] font-mono">Simple & added sugars</span>
+          )}
+        </div>
 
         {/* 3. Saturated Fat */}
-        {(() => {
-          const sf = nutrition.saturated_fat_g ?? 0;
-          const tf = getTrafficColor(sf, 1.5, 4.0);
-          return (
-            <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Saturated Fat</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${tf.badge}`}>
-                  {sf <= 1.5 ? 'Low' : sf <= 4.0 ? 'Moderate' : 'High'}
-                </span>
-              </div>
-              <div className="my-3">
-                <span className={`text-2xl font-bold tracking-tight ${tf.text}`}>
-                  {sf.toFixed(1)}
-                </span>
-                <span className="text-xs text-zinc-400 ml-1">g</span>
-              </div>
-              {showSliders ? (
-                <input
-                  type="range"
-                  min="0"
-                  max="25"
-                  step="0.5"
-                  value={sf}
-                  onChange={(e) => updateValue('saturated_fat_g', parseFloat(e.target.value))}
-                />
-              ) : (
-                <span className="text-[11px] text-zinc-500">Lipids & fatty acids</span>
-              )}
-            </div>
-          );
-        })()}
+        <div className="p-4 rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] flex flex-col justify-between">
+          <span className="text-xs font-mono text-[#6E6A63] uppercase">Saturated Fat</span>
+          <div className="my-2">
+            <span className="text-2xl font-black font-mono text-[#161616]">
+              {(nutrition.saturated_fat_g ?? 0).toFixed(1)}
+            </span>
+            <span className="text-xs text-[#6E6A63] ml-1">g</span>
+          </div>
+          {showSliders ? (
+            <input
+              type="range"
+              min="0"
+              max="25"
+              step="0.5"
+              value={nutrition.saturated_fat_g ?? 0}
+              onChange={(e) => updateValue('saturated_fat_g', parseFloat(e.target.value))}
+            />
+          ) : (
+            <span className="text-[11px] text-[#6E6A63] font-mono">Fatty acids</span>
+          )}
+        </div>
 
         {/* 4. Salt */}
-        {(() => {
-          const salt = nutrition.salt_g ?? 0;
-          const tf = getTrafficColor(salt, 0.3, 1.5);
-          return (
-            <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Salt</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${tf.badge}`}>
-                  {salt <= 0.3 ? 'Low' : salt <= 1.5 ? 'Moderate' : 'High'}
-                </span>
-              </div>
-              <div className="my-3">
-                <span className={`text-2xl font-bold tracking-tight ${tf.text}`}>
-                  {salt.toFixed(2)}
-                </span>
-                <span className="text-xs text-zinc-400 ml-1">g</span>
-              </div>
-              {showSliders ? (
-                <input
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.05"
-                  value={salt}
-                  onChange={(e) => updateValue('salt_g', parseFloat(e.target.value))}
-                />
-              ) : (
-                <span className="text-[11px] text-zinc-500">Sodium equivalent</span>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* 5. Dietary Fiber */}
-        {(() => {
-          const fib = nutrition.fibre_g ?? 0;
-          return (
-            <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Fiber</span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400">
-                  Beneficial
-                </span>
-              </div>
-              <div className="my-3">
-                <span className="text-2xl font-bold tracking-tight text-emerald-400">
-                  {fib.toFixed(1)}
-                </span>
-                <span className="text-xs text-zinc-400 ml-1">g</span>
-              </div>
-              {showSliders ? (
-                <input
-                  type="range"
-                  min="0"
-                  max="15"
-                  step="0.5"
-                  value={fib}
-                  onChange={(e) => updateValue('fibre_g', parseFloat(e.target.value))}
-                />
-              ) : (
-                <span className="text-[11px] text-zinc-500">Dietary roughage</span>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* 6. Protein */}
-        <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>Protein</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400">
-              Beneficial
+        <div className="p-4 rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] flex flex-col justify-between">
+          <span className="text-xs font-mono text-[#6E6A63] uppercase">Salt</span>
+          <div className="my-2">
+            <span className="text-2xl font-black font-mono text-[#161616]">
+              {(nutrition.salt_g ?? 0).toFixed(2)}
             </span>
+            <span className="text-xs text-[#6E6A63] ml-1">g</span>
           </div>
-          <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-white">
-              {(nutrition.protein_g ?? 0).toFixed(1)}
-            </span>
-            <span className="text-xs text-zinc-400 ml-1">g</span>
-          </div>
-          <span className="text-[11px] text-zinc-500">Muscle & tissue building</span>
-        </div>
-
-        {/* 7. Carbohydrates */}
-        <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>Carbohydrates</span>
-          </div>
-          <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-white">
-              {(nutrition.carbs_g ?? 0).toFixed(1)}
-            </span>
-            <span className="text-xs text-zinc-400 ml-1">g</span>
-          </div>
-          <span className="text-[11px] text-zinc-500">Total complex + simple</span>
-        </div>
-
-        {/* 8. Total Fat */}
-        <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.06] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>Total Fat</span>
-          </div>
-          <div className="my-3">
-            <span className="text-2xl font-bold tracking-tight text-white">
-              {(nutrition.fat_g ?? 0).toFixed(1)}
-            </span>
-            <span className="text-xs text-zinc-400 ml-1">g</span>
-          </div>
-          <span className="text-[11px] text-zinc-500">All lipid categories</span>
+          {showSliders ? (
+            <input
+              type="range"
+              min="0"
+              max="5"
+              step="0.05"
+              value={nutrition.salt_g ?? 0}
+              onChange={(e) => updateValue('salt_g', parseFloat(e.target.value))}
+            />
+          ) : (
+            <span className="text-[11px] text-[#6E6A63] font-mono">Sodium chloride</span>
+          )}
         </div>
 
       </div>
