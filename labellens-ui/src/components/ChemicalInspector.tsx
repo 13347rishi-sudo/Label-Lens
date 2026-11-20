@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { KnowledgeAnalysis } from '../lib/types';
 import { CaretDown, CaretUp } from '@phosphor-icons/react';
 import { TRANSLATIONS, type Language } from '../lib/i18n';
@@ -17,6 +17,25 @@ export function ChemicalInspector({ ingredients, knowledge, language = 'en' }: C
   const hasPalm = knowledge.palm_oil.length > 0;
   const hasHiddenSugars = knowledge.hidden_sugars.length > 0;
   const hasAdditives = knowledge.additives.length > 0;
+
+  // Precompute O(1) ingredient flag lookups to avoid thousands of substring iterations per render
+  const ingredientFlagsMap = useMemo(() => {
+    const map = new Map<string, { isSugar: boolean; isPalm: boolean; isAllergen: boolean; isAdditive: boolean }>();
+    const lowerSugars = knowledge.hidden_sugars.map(s => s.name.toLowerCase());
+    const lowerPalm = knowledge.palm_oil.map(p => p.name.toLowerCase());
+    const lowerAllergens = knowledge.allergens.map(a => a.name.toLowerCase());
+    const lowerAdditives = knowledge.additives.map(ad => [ad.name.toLowerCase(), ad.matched_text.toLowerCase()]);
+
+    for (const ing of ingredients) {
+      const lower = ing.toLowerCase();
+      const isSugar = lowerSugars.some(s => lower.includes(s));
+      const isPalm = lowerPalm.some(p => lower.includes(p));
+      const isAllergen = lowerAllergens.some(a => lower.includes(a));
+      const isAdditive = lowerAdditives.some(([n, m]) => lower.includes(n) || lower.includes(m));
+      map.set(ing, { isSugar, isPalm, isAllergen, isAdditive });
+    }
+    return map;
+  }, [ingredients, knowledge]);
 
   return (
     <div className="w-full bg-white border border-[#E2DDD4] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
@@ -163,10 +182,8 @@ export function ChemicalInspector({ ingredients, knowledge, language = 'en' }: C
           <div className="p-4 rounded-xl bg-[#F6F3EC] border border-[#E2DDD4] max-h-64 overflow-y-auto">
             <div className="flex flex-wrap gap-2 text-xs">
               {ingredients.map((ing, idx) => {
-                const isSugar = knowledge.hidden_sugars.some((s) => ing.toLowerCase().includes(s.name.toLowerCase()));
-                const isPalm = knowledge.palm_oil.some((p) => ing.toLowerCase().includes(p.name.toLowerCase()));
-                const isAllergen = knowledge.allergens.some((a) => ing.toLowerCase().includes(a.name.toLowerCase()));
-                const isAdditive = knowledge.additives.some((ad) => ing.toLowerCase().includes(ad.name.toLowerCase()) || ing.toLowerCase().includes(ad.matched_text.toLowerCase()));
+                const flags = ingredientFlagsMap.get(ing) || { isSugar: false, isPalm: false, isAllergen: false, isAdditive: false };
+                const { isSugar, isPalm, isAllergen, isAdditive } = flags;
 
                 if (activeTab === 'sugars' && !isSugar) return null;
                 if (activeTab === 'palm' && !isPalm) return null;

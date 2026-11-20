@@ -18,6 +18,9 @@ import { CaretDown, CaretUp, ArrowCounterClockwise } from '@phosphor-icons/react
 
 type TabType = 'overview' | 'duel';
 
+// Precomputed profile map for O(1) lookup
+const HEALTH_PROFILES_MAP = new Map(HEALTH_PROFILES.map((p) => [p.id, p]));
+
 // 5 Familiar Indian benchmark foods for instant 1-tap testing at kiosk
 const QUICK_BENCHMARKS = [
   { id: 'prod_maggi', name: 'Maggi' },
@@ -49,12 +52,12 @@ export function App() {
   }, []);
 
   // Quick benchmark select
-  const handleSelectQuick = (id: string) => {
+  const handleSelectQuick = useCallback((id: string) => {
     const found = findProductById(id);
     if (found) {
       handleSelectProduct(found);
     }
-  };
+  }, [handleSelectProduct]);
 
   // Profile selection
   const handleSelectProfile = (id: HealthProfileId) => {
@@ -63,9 +66,15 @@ export function App() {
   };
 
   // Idle Timer (60s inactivity auto-reset for science fair visitors)
+  // Throttled to max 1 update per second to eliminate main-thread event listener thrash
   useEffect(() => {
+    let lastThrottledTime = Date.now();
     const handleUserInteraction = () => {
-      lastActivityRef.current = Date.now();
+      const now = Date.now();
+      if (now - lastThrottledTime > 1000) {
+        lastActivityRef.current = now;
+        lastThrottledTime = now;
+      }
     };
 
     window.addEventListener('mousemove', handleUserInteraction, { passive: true });
@@ -114,7 +123,7 @@ export function App() {
     return applyHealthProfile(scoringResult, knowledgeResult, liveNutrition, activeProfile);
   }, [scoringResult, knowledgeResult, liveNutrition, activeProfile]);
 
-  const activeProfileData = HEALTH_PROFILES.find((p) => p.id === activeProfile) || HEALTH_PROFILES[0];
+  const activeProfileData = HEALTH_PROFILES_MAP.get(activeProfile) || HEALTH_PROFILES[0];
 
   return (
     <div className="min-h-screen bg-[#F6F3EC] text-[#161616] font-sans antialiased selection:bg-[#161616] selection:text-[#F6F3EC]">

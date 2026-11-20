@@ -13,6 +13,7 @@ import { playBarcodeBeep, playSuccessChime, playAlertBuzzer } from '../lib/sound
 import { lookupProductLive } from '../lib/database';
 import {
   isNativeBarcodeDetectorSupported,
+  getNativeBarcodeDetector,
   scanCanvasWithAllEngines,
   scanImageFileWithAllEngines,
   getOptimizedZxingReader
@@ -60,6 +61,12 @@ export function ScannerHUD({
       scanLoopIntervalRef.current = null;
     }
     if (zxingReaderRef.current) {
+      try {
+        // @ts-expect-error Reset browser reader stream
+        zxingReaderRef.current.reset?.();
+      } catch {
+        // Ignore
+      }
       zxingReaderRef.current = null;
     }
     if (streamRef.current) {
@@ -170,16 +177,12 @@ export function ScannerHUD({
 
       if (isNativeBarcodeDetectorSupported()) {
         const offscreenCanvas = document.createElement('canvas');
+        const detector = getNativeBarcodeDetector();
         const interval = window.setInterval(async () => {
           const video = videoRef.current;
-          if (!video || video.readyState < 2 || !video.videoWidth) return;
+          if (!video || video.readyState < 2 || !video.videoWidth || !detector) return;
 
           try {
-            // @ts-expect-error Native BarcodeDetector API
-            const detector = new window.BarcodeDetector({
-              formats: ['qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'data_matrix']
-            });
-
             offscreenCanvas.width = video.videoWidth;
             offscreenCanvas.height = video.videoHeight;
             const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });

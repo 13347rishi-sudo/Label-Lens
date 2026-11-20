@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { EXHIBITION_PRODUCTS } from '../lib/database';
+import { useState, useMemo } from 'react';
+import { EXHIBITION_PRODUCTS, findProductById } from '../lib/database';
 import { scoreProduct, getGradeColor } from '../lib/scoring';
 import type { ProductItem } from '../lib/types';
 
@@ -7,11 +7,11 @@ export function ComparisonArena() {
   const [prodAId, setProdAId] = useState<string>('prod_oats');
   const [prodBId, setProdBId] = useState<string>('prod_coke');
 
-  const prodA = EXHIBITION_PRODUCTS.find((p) => p.id === prodAId) || EXHIBITION_PRODUCTS[2];
-  const prodB = EXHIBITION_PRODUCTS.find((p) => p.id === prodBId) || EXHIBITION_PRODUCTS[0];
+  const prodA = useMemo(() => findProductById(prodAId) || EXHIBITION_PRODUCTS[2], [prodAId]);
+  const prodB = useMemo(() => findProductById(prodBId) || EXHIBITION_PRODUCTS[0], [prodBId]);
 
-  const scoreA = scoreProduct(prodA.per_100g, prodA.is_beverage, prodA.fruit_veg_pct);
-  const scoreB = scoreProduct(prodB.per_100g, prodB.is_beverage, prodB.fruit_veg_pct);
+  const scoreA = useMemo(() => scoreProduct(prodA.per_100g, prodA.is_beverage, prodA.fruit_veg_pct), [prodA]);
+  const scoreB = useMemo(() => scoreProduct(prodB.per_100g, prodB.is_beverage, prodB.fruit_veg_pct), [prodB]);
 
   const winner = scoreA.score_1_to_10 >= scoreB.score_1_to_10 ? 'A' : 'B';
   const scoreDiff = Math.abs(scoreA.score_1_to_10 - scoreB.score_1_to_10).toFixed(1);

@@ -27,27 +27,43 @@ export function isNativeBarcodeDetectorSupported(): boolean {
   return typeof window !== 'undefined' && 'BarcodeDetector' in window;
 }
 
+// Cached Native BarcodeDetector singleton instance
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedNativeDetector: any = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getNativeBarcodeDetector(): any {
+  if (!isNativeBarcodeDetectorSupported()) return null;
+  if (!cachedNativeDetector) {
+    try {
+      // @ts-expect-error Native window.BarcodeDetector
+      cachedNativeDetector = new window.BarcodeDetector({
+        formats: [
+          'qr_code',
+          'ean_13',
+          'ean_8',
+          'upc_a',
+          'upc_e',
+          'code_128',
+          'code_39',
+          'data_matrix'
+        ]
+      });
+    } catch {
+      cachedNativeDetector = null;
+    }
+  }
+  return cachedNativeDetector;
+}
+
 /**
  * Native Hardware BarcodeDetector API (fastest, most accurate on Android Chrome, Edge, and Chromium).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function detectWithNativeAPI(source: ImageBitmapSource): Promise<string | undefined> {
-  if (!isNativeBarcodeDetectorSupported()) return undefined;
+  const detector = getNativeBarcodeDetector();
+  if (!detector) return undefined;
 
   try {
-    // @ts-expect-error Native window.BarcodeDetector
-    const detector = new window.BarcodeDetector({
-      formats: [
-        'qr_code',
-        'ean_13',
-        'ean_8',
-        'upc_a',
-        'upc_e',
-        'code_128',
-        'code_39',
-        'data_matrix'
-      ]
-    });
     const results = await detector.detect(source);
     if (results && results.length > 0 && results[0].rawValue) {
       return String(results[0].rawValue).trim();

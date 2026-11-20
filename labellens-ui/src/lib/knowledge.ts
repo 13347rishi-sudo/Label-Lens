@@ -57,6 +57,13 @@ export const ADDITIVES_DB: Record<string, { name: string; severity: 'high' | 'me
   'e415': { name: 'Xanthan Gum', severity: 'low', description: 'Fermented plant thickening agent' },
 };
 
+// Pre-index additive entries with lowercased names once at module level
+const PREINDEXED_ADDITIVES = Object.entries(ADDITIVES_DB).map(([eCode, data]) => ({
+  eCode,
+  lowerName: data.name.toLowerCase(),
+  data
+}));
+
 export function analyzeIngredients(ingredients: string[], statedAllergens: string[] = []): KnowledgeAnalysis {
   const hiddenSugars: FlagItem[] = [];
   const palmOil: FlagItem[] = [];
@@ -64,16 +71,17 @@ export function analyzeIngredients(ingredients: string[], statedAllergens: strin
   const additives: FlagItem[] = [];
   const warnings: string[] = [];
 
+  const lowerIngredients = ingredients.map((ing) => ({ raw: ing, lower: ing.toLowerCase() }));
   const fullText = ingredients.join(' ').toLowerCase();
 
-  // 1. Detect Hidden Sugars
+  // 1. Detect Hidden Sugars (using pre-lowercased items)
   for (const sugar of HIDDEN_SUGAR_LIST) {
-    for (const ing of ingredients) {
-      if (ing.toLowerCase().includes(sugar)) {
-        if (!hiddenSugars.some(s => s.name === sugar)) {
+    for (const ing of lowerIngredients) {
+      if (ing.lower.includes(sugar)) {
+        if (!hiddenSugars.some(s => s.name === sugar.toUpperCase())) {
           hiddenSugars.push({
             name: sugar.toUpperCase(),
-            matched_text: ing,
+            matched_text: ing.raw,
             category: 'sugar',
             description: 'Refined sugar alias with high glycemic index'
           });
@@ -82,14 +90,14 @@ export function analyzeIngredients(ingredients: string[], statedAllergens: strin
     }
   }
 
-  // 2. Detect Palm Oil
+  // 2. Detect Palm Oil (using pre-lowercased items)
   for (const palm of PALM_OIL_LIST) {
-    for (const ing of ingredients) {
-      if (ing.toLowerCase().includes(palm)) {
-        if (!palmOil.some(p => p.name === palm)) {
+    for (const ing of lowerIngredients) {
+      if (ing.lower.includes(palm)) {
+        if (!palmOil.some(p => p.name === palm.toUpperCase())) {
           palmOil.push({
             name: palm.toUpperCase(),
-            matched_text: ing,
+            matched_text: ing.raw,
             category: 'palm',
             description: 'High in saturated palmitic acid; environmental deforestation driver'
           });
@@ -121,15 +129,15 @@ export function analyzeIngredients(ingredients: string[], statedAllergens: strin
     }
   }
 
-  // 4. Detect Additives & E-Numbers
-  for (const [eCode, data] of Object.entries(ADDITIVES_DB)) {
-    if (fullText.includes(eCode) || fullText.includes(data.name.toLowerCase())) {
+  // 4. Detect Additives & E-Numbers (using pre-indexed list)
+  for (const item of PREINDEXED_ADDITIVES) {
+    if (fullText.includes(item.eCode) || fullText.includes(item.lowerName)) {
       additives.push({
-        name: `${eCode.toUpperCase()}: ${data.name}`,
-        matched_text: data.name,
+        name: `${item.eCode.toUpperCase()}: ${item.data.name}`,
+        matched_text: item.data.name,
         category: 'additive',
-        severity: data.severity,
-        description: data.description
+        severity: item.data.severity,
+        description: item.data.description
       });
     }
   }

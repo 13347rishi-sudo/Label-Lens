@@ -529,6 +529,9 @@ export const GS1_INDIA_MANUFACTURERS: Gs1ManufacturerProfile[] = [
   }
 ];
 
+// Pre-sorted by prefix length (longest prefix first) once at module level for O(1) sort overhead
+const SORTED_GS1_INDIA_MANUFACTURERS = [...GS1_INDIA_MANUFACTURERS].sort((a, b) => b.prefix.length - a.prefix.length);
+
 /**
  * Resolve an Indian barcode using the GS1 India manufacturer registry.
  * Guarantees that any barcode starting with `890` (100% of Indian retail goods)
@@ -539,8 +542,7 @@ export function resolveGs1IndiaBarcode(barcode: string): ProductItem | undefined
   if (!clean.startsWith('890')) return undefined;
 
   // Find most specific prefix match (longest prefix first)
-  const sorted = [...GS1_INDIA_MANUFACTURERS].sort((a, b) => b.prefix.length - a.prefix.length);
-  const match = sorted.find((m) => clean.startsWith(m.prefix));
+  const match = SORTED_GS1_INDIA_MANUFACTURERS.find((m) => clean.startsWith(m.prefix));
   if (!match) return undefined;
 
   const productName = `${match.manufacturer} Food Item`;

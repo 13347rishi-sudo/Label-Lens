@@ -5349,6 +5349,28 @@ export const EXHIBITION_PRODUCTS: ProductItem[] = [
   }
 ];
 
+// High-Efficiency O(1) Index Maps initialized once at module load
+const PRODUCTS_BY_ID = new Map<string, ProductItem>();
+const PRODUCTS_BY_BARCODE = new Map<string, ProductItem>();
+const PRODUCTS_BY_QR_URL = new Map<string, ProductItem>();
+
+for (const p of EXHIBITION_PRODUCTS) {
+  PRODUCTS_BY_ID.set(p.id, p);
+  if (p.qr_code_url) {
+    PRODUCTS_BY_QR_URL.set(p.qr_code_url, p);
+  }
+  if (p.barcode) {
+    PRODUCTS_BY_BARCODE.set(p.barcode, p);
+    PRODUCTS_BY_BARCODE.set(p.barcode.replace(/^0+/, ''), p);
+  }
+  if (p.barcode_aliases) {
+    for (const a of p.barcode_aliases) {
+      PRODUCTS_BY_BARCODE.set(a, p);
+      PRODUCTS_BY_BARCODE.set(a.replace(/^0+/, ''), p);
+    }
+  }
+}
+
 /**
  * Strictly extracts a valid GTIN/EAN barcode from any payload (GS1 Digital Link, OpenFoodFacts URL, query param, or raw barcode).
  * Returns undefined if no valid barcode sequence is found.
@@ -5410,9 +5432,15 @@ export function resolveQrOrBarcode(rawText: string): ProductItem | undefined {
   if (!rawText) return undefined;
   const raw = rawText.trim();
 
-  // 1. Direct match on official exhibition QR code URL
-  const urlMatch = EXHIBITION_PRODUCTS.find((p) => p.qr_code_url && (p.qr_code_url === raw || raw.startsWith(p.qr_code_url)));
-  if (urlMatch) return urlMatch;
+  // 1. Direct O(1) match on official exhibition QR code URL
+  const qrMatch = PRODUCTS_BY_QR_URL.get(raw);
+  if (qrMatch) return qrMatch;
+
+  // Prefix check if raw starts with qr_code_url
+  if (raw.startsWith('http')) {
+    const urlMatch = EXHIBITION_PRODUCTS.find((p) => p.qr_code_url && raw.startsWith(p.qr_code_url));
+    if (urlMatch) return urlMatch;
+  }
 
   // 2. Direct match on JSON payload
   if (raw.startsWith('{') && raw.endsWith('}')) {
@@ -5420,7 +5448,7 @@ export function resolveQrOrBarcode(rawText: string): ProductItem | undefined {
       const parsed = JSON.parse(raw);
       if (parsed.gtin || parsed.barcode) {
         const c = String(parsed.gtin || parsed.barcode).replace(/^0+/, '');
-        const match = EXHIBITION_PRODUCTS.find((p) => p.barcode.replace(/^0+/, '') === c);
+        const match = PRODUCTS_BY_BARCODE.get(c);
         if (match) return match;
       }
     } catch {
@@ -5428,19 +5456,15 @@ export function resolveQrOrBarcode(rawText: string): ProductItem | undefined {
     }
   }
 
-  // 3. Extract barcode digits strictly from payload
+  // 3. Extract barcode digits strictly from payload and do O(1) lookup
   const barcode = extractBarcodeFromPayload(raw);
   if (barcode) {
+    const directMatch = PRODUCTS_BY_BARCODE.get(barcode);
+    if (directMatch) return directMatch;
+
     const unpadded = barcode.replace(/^0+/, '');
-    const match = EXHIBITION_PRODUCTS.find((p) => {
-      const pUnpadded = p.barcode.replace(/^0+/, '');
-      if (p.barcode === barcode || pUnpadded === unpadded) return true;
-      if (p.barcode_aliases && p.barcode_aliases.some((a) => a === barcode || a.replace(/^0+/, '') === unpadded)) {
-        return true;
-      }
-      return false;
-    });
-    if (match) return match;
+    const unpaddedMatch = PRODUCTS_BY_BARCODE.get(unpadded);
+    if (unpaddedMatch) return unpaddedMatch;
   }
 
   return undefined;
@@ -5451,7 +5475,7 @@ export function findProductByBarcode(code: string): ProductItem | undefined {
 }
 
 export function findProductById(id: string): ProductItem | undefined {
-  return EXHIBITION_PRODUCTS.find((p) => p.id === id);
+  return PRODUCTS_BY_ID.get(id);
 }
 
 /**
