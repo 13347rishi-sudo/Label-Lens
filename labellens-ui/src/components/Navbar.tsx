@@ -6,13 +6,12 @@ import {
   ArrowsIn,
   Cpu,
   Info,
-  Translate,
-  Sparkle
+  Translate
 } from '@phosphor-icons/react';
 import { HEALTH_PROFILES } from '../lib/profiles';
 import type { HealthProfileId } from '../lib/types';
 import { toggleSound, isSoundEnabled } from '../lib/sound';
-import { TRANSLATIONS, type Language } from '../lib/i18n';
+import type { Language } from '../lib/i18n';
 
 interface NavbarProps {
   activeProfile: HealthProfileId;
@@ -20,7 +19,6 @@ interface NavbarProps {
   selectedModel: string;
   onSelectModel: (model: string) => void;
   onOpenPitchModal: () => void;
-  onOpenDemoMode: () => void;
   language: Language;
   onToggleLanguage: (lang: Language) => void;
 }
@@ -31,13 +29,11 @@ export function Navbar({
   selectedModel,
   onSelectModel,
   onOpenPitchModal,
-  onOpenDemoMode,
   language,
   onToggleLanguage
 }: NavbarProps) {
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const t = TRANSLATIONS[language];
 
   const handleToggleSound = () => {
     const state = toggleSound();
@@ -96,7 +92,7 @@ export function Navbar({
           })}
         </div>
 
-        {/* Right: Kiosk Controls, Language Switcher & Demo Mode Button */}
+        {/* Right: Kiosk Controls & Language Switcher */}
         <div className="flex items-center gap-2">
 
           {/* AI Model Indicator for Science Exhibition Judges */}
@@ -115,16 +111,6 @@ export function Navbar({
               </option>
             </select>
           </div>
-
-          {/* Prominent Demo Mode Button for Science Exhibition Judges */}
-          <button
-            onClick={onOpenDemoMode}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs sm:text-sm transition-all active:scale-95 shadow-md shadow-amber-500/20 min-h-[40px]"
-            title="Instant demo with 6 benchmark food products"
-          >
-            <Sparkle size={16} weight="fill" />
-            <span>{t.demoModeBtn}</span>
-          </button>
 
           {/* Language Toggle (EN / हिंदी) */}
           <button

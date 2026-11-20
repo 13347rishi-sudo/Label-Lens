@@ -29,14 +29,12 @@ interface ScannerHUDProps {
   onProductResolved: (product: ProductItem) => void;
   selectedModel: string;
   language?: Language;
-  onOpenDemoMode?: () => void;
 }
 
 export function ScannerHUD({
   onProductResolved,
   selectedModel,
-  language = 'en',
-  onOpenDemoMode
+  language = 'en'
 }: ScannerHUDProps) {
   const [hudTab, setHudTab] = useState<'camera' | 'upload' | 'barcode'>('camera');
   const [cameraActive, setCameraActive] = useState(false);
@@ -426,17 +424,6 @@ export function ScannerHUD({
                   <span>{language === 'en' ? 'Take Photo' : 'फोटो खींचें'}</span>
                 </button>
               </div>
-
-              {/* Demo Mode Button in Viewport for instant backup */}
-              {onOpenDemoMode && (
-                <button
-                  type="button"
-                  onClick={onOpenDemoMode}
-                  className="text-xs font-semibold text-zinc-400 hover:text-white underline pt-1"
-                >
-                  {language === 'en' ? 'Or tap here for Demo Mode (Test Sample Foods)' : 'या डेमो मोड में खाद्य पदार्थ चुनें'}
-                </button>
-              )}
             </div>
           )}
 

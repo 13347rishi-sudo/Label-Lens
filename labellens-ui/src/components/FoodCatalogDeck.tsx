@@ -5,7 +5,7 @@ import { playBarcodeBeep, playSuccessChime } from '../lib/sound';
 import type { ProductItem } from '../lib/types';
 import { MagnifyingGlass, Globe, CircleNotch, CaretDown, CaretUp } from '@phosphor-icons/react';
 
-interface JudgeDemoDeckProps {
+interface FoodCatalogDeckProps {
   onSelectProduct: (product: ProductItem) => void;
   selectedProductId?: string;
 }
@@ -30,7 +30,7 @@ const CATEGORY_TABS = [
   { id: 'dairy', label: 'Dairy' }
 ];
 
-export function JudgeDemoDeck({ onSelectProduct, selectedProductId }: JudgeDemoDeckProps) {
+export function FoodCatalogDeck({ onSelectProduct, selectedProductId }: FoodCatalogDeckProps) {
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLiveSearching, setIsLiveSearching] = useState(false);

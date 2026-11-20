@@ -1,14 +1,13 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { ScannerHUD } from './components/ScannerHUD';
-import { JudgeDemoDeck } from './components/JudgeDemoDeck';
+import { FoodCatalogDeck } from './components/FoodCatalogDeck';
 import { VerdictCard } from './components/VerdictCard';
 import { InteractiveBentoGrid } from './components/InteractiveBentoGrid';
 import { ChemicalInspector } from './components/ChemicalInspector';
 import { ComparisonArena } from './components/ComparisonArena';
 import { ExhibitionPitchModal } from './components/ExhibitionPitchModal';
 import { HealthierAlternativesCard } from './components/HealthierAlternativesCard';
-import { DemoModeModal } from './components/DemoModeModal';
 
 import { EXHIBITION_PRODUCTS } from './lib/database';
 import { scoreProduct } from './lib/scoring';
@@ -27,7 +26,6 @@ export function App() {
   const [currentProduct, setCurrentProduct] = useState<ProductItem>(EXHIBITION_PRODUCTS[0]);
   const [liveNutrition, setLiveNutrition] = useState<Per100g>(EXHIBITION_PRODUCTS[0].per_100g);
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [idleResetNotice, setIdleResetNotice] = useState(false);
@@ -112,7 +110,6 @@ export function App() {
         selectedModel={selectedModel}
         onSelectModel={setSelectedModel}
         onOpenPitchModal={() => setIsPitchModalOpen(true)}
-        onOpenDemoMode={() => setIsDemoModalOpen(true)}
         language={language}
         onToggleLanguage={setLanguage}
       />
@@ -170,7 +167,6 @@ export function App() {
                   onProductResolved={handleSelectProduct}
                   selectedModel={selectedModel}
                   language={language}
-                  onOpenDemoMode={() => setIsDemoModalOpen(true)}
                 />
               </div>
 
@@ -190,7 +186,7 @@ export function App() {
                   </div>
                 </div>
 
-                <JudgeDemoDeck
+                <FoodCatalogDeck
                   onSelectProduct={handleSelectProduct}
                   selectedProductId={currentProduct.id}
                 />
@@ -265,14 +261,6 @@ export function App() {
         )}
 
       </main>
-
-      {/* Demo Mode Modal (Instant test for Judges) */}
-      <DemoModeModal
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-        onSelectProduct={handleSelectProduct}
-        language={language}
-      />
 
       {/* Exhibition Judge Brief Modal */}
       <ExhibitionPitchModal

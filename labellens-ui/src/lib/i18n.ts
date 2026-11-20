@@ -5,11 +5,10 @@ export const TRANSLATIONS = {
     appTitle: 'LabelLens',
     appSubtitle: 'Food Packaging Scanner & Health Engine',
     exhibitionTag: 'Science Exhibition Kiosk',
-    disclaimer: '⚠️ Informational tool for science exhibition demonstration — not medical advice. Always verify allergens & nutrition directly on the packaging.',
+    disclaimer: '⚠️ Informational tool for science exhibition — not medical advice. Always verify allergens & nutrition directly on the packaging.',
     trustStrip: '🔒 Runs 100% offline. Packaging photos and video feeds never leave this laptop.',
     offlineBadge: 'Offline Mode: 115+ Foods Ready',
     onlineBadge: 'Online Fallback Active (Wi-Fi)',
-    demoModeBtn: 'Demo Mode',
     scanPacketBtn: 'Scan a Food Packet',
     scanOrTap: 'Scan with camera, or tap a sample food below:',
     topWarningsTitle: 'Top 3 Health Findings',
@@ -35,8 +34,8 @@ export const TRANSLATIONS = {
     },
     errors: {
       blurry: 'Label is blurry — please hold it steady with more light.',
-      notFound: 'Product not in offline catalog. Tap Demo Mode or try another packet.',
-      cameraBlocked: 'Camera stream blocked. Try "Snap Photo" or use Demo Mode.',
+      notFound: 'Product not in offline catalog. Pick from sample foods or try another packet.',
+      cameraBlocked: 'Camera stream blocked. Try "Snap Photo" or pick from sample foods.',
       generic: 'Could not read label. Please hold steady and try again.'
     },
     grades: {
@@ -55,7 +54,6 @@ export const TRANSLATIONS = {
     trustStrip: '🔒 यह पूर्णतः ऑफलाइन चलता है। फोटो एवं कैमरा वीडियो कभी इस लैपटॉप से बाहर नहीं जाता।',
     offlineBadge: 'ऑफलाइन मोड: 115+ खाद्य उत्पाद तैयार',
     onlineBadge: 'ऑनलाइन खोज सक्रिय (वाई-फाई)',
-    demoModeBtn: 'डेमो मोड',
     scanPacketBtn: 'खाद्य पैकेट स्कैन करें',
     scanOrTap: 'कैमरे से स्कैन करें, या नीचे से कोई खाद्य पदार्थ चुनें:',
     topWarningsTitle: 'मुख्य 3 स्वास्थ्य निष्कर्ष',
@@ -81,8 +79,8 @@ export const TRANSLATIONS = {
     },
     errors: {
       blurry: 'लेबल धुंधला है — कृपया अच्छी रोशनी में स्थिर रखें।',
-      notFound: 'डेटाबेस में नहीं मिला। डेमो मोड दबाएं या दूसरा पैकेट आज़माएं।',
-      cameraBlocked: 'कैमरा उपलब्ध नहीं है। फोटो खींचें या डेमो मोड का उपयोग करें।',
+      notFound: 'डेटाबेस में नहीं मिला। नमूना खाद्य पदार्थों में से चुनें या दूसरा पैकेट आज़माएं।',
+      cameraBlocked: 'कैमरा उपलब्ध नहीं है। फोटो खींचें या नमूना खाद्य पदार्थों में से चुनें।',
       generic: 'लेबल पढ़ने में असमर्थ। कृपया दोबारा प्रयास करें।'
     },
     grades: {
