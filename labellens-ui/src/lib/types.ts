@@ -69,6 +69,8 @@ export interface HealthierAlternative {
   reason: string;
   savings: string;
   target_id?: string;
+  web_source?: string;
+  web_url?: string;
 }
 
 export interface ProductItem {

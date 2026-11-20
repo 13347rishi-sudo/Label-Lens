@@ -502,42 +502,63 @@ export function getContextualAlternatives(product: ProductItem): HealthierAltern
   ];
 }
 
+import { searchWebForHealthierAlternatives } from './webSearchEngine';
+
 /**
- * On-Demand AI-Generated Healthier Alternatives using Local Ollama model.
- * Lets the user ask the local vision/language model to suggest custom swaps tailored to the exact item.
+ * On-Demand AI-Generated Healthier Alternatives using Local Ollama model grounded with Live Web Search.
+ * Searches live food registries (Open Food Facts v2, Wikipedia) and feeds real-time web results into the AI.
+ * If local Ollama is offline or on production cloud, seamlessly falls back to the live web search engine.
  */
 export async function generateAiSwapsWithOllama(
   product: ProductItem,
   modelName = 'qwen3.5:2b'
 ): Promise<HealthierAlternative[]> {
-  const prompt = `You are an expert nutritionist specializing in Indian and global foods.
-Analyze this food product:
-Name: "${product.product_name}"
-Brand: "${product.brand}"
-Category: "${product.category}"
-Ingredients: "${product.ingredients.slice(0, 8).join(', ')}"
-Nutrition per 100g: Energy ${product.per_100g.energy_kcal ?? '—'} kcal, Sugars ${product.per_100g.sugars_g ?? '—'}g, Saturated Fat ${product.per_100g.saturated_fat_g ?? '—'}g, Sodium ${product.per_100g.sodium_mg ?? '—'}mg.
+  // 1. First, search live web databases for real alternatives
+  let webFindings: HealthierAlternative[] = [];
+  try {
+    webFindings = await searchWebForHealthierAlternatives(product);
+  } catch (err) {
+    console.warn('Web search pre-fetch warning:', err);
+  }
 
-Suggest exactly 2 healthier alternatives:
-1. One healthier PACKAGED food alternative available in India (include reputable brand name like Amul, Slurrp Farm, Yoga Bar, Pintola, Farmley, Raw Pressery, Epigamia, The Whole Truth).
-2. One NATURAL whole food alternative (like specific millets, sprouted pulses, seeds, nuts, or whole seasonal fruit).
+  // Format web search findings for RAG grounding
+  const webContextText = webFindings.length > 0
+    ? webFindings.map((w, i) => `${i + 1}. ${w.name} (${w.category}, Grade ${w.nutri_grade}) - ${w.reason} [Source: ${w.web_source}]`).join('\n')
+    : 'No live web items found; use internal nutritional knowledge.';
 
-Respond ONLY with a valid JSON array matching this format:
+  const prompt = `You are an expert food scientist and nutritionist specializing in healthy Indian and global alternatives.
+Target scanned food to replace:
+- Name: "${product.product_name}"
+- Brand: "${product.brand}"
+- Category: "${product.category}"
+- Current Nutrition per 100g: ${product.per_100g.sugars_g ?? 0}g sugar, ${product.per_100g.saturated_fat_g ?? 0}g saturated fat, ${product.per_100g.salt_g ?? 0}g salt.
+
+LIVE WEB SEARCH FINDINGS:
+${webContextText}
+
+TASK:
+Recommend exactly 2 healthier alternatives (Grade A or B) to replace "${product.product_name}":
+1. One healthier PACKAGED food available in India (e.g. Slurrp Farm, Yoga Bar, Amul, Farmley, Raw Pressery, Pintola).
+2. One NATURAL whole food (e.g. Foxtail Millet, Tender Coconut, Roasted Makhana, Spiced Chaas, Sprouted Moong).
+
+Respond ONLY with a valid JSON array matching this schema:
 [
   {
     "name": "Healthier Packaged Product Name",
-    "brand": "Brand Name",
+    "brand": "Brand",
     "category": "packaged",
     "nutri_grade": "A",
-    "reason": "Brief 1-sentence scientific reason why it is healthier",
-    "savings": "Key benefit e.g. -80% sugar, zero palm oil"
+    "reason": "1 clear sentence explaining why it is healthier",
+    "savings": "Specific savings e.g. -80% sugar, zero palm oil",
+    "web_source": "Live Web Search"
   },
   {
-    "name": "Natural Whole Food Name (e.g. Foxtail Millet Khichdi / Spiced Chaas / Roasted Makhana)",
+    "name": "Natural Whole Food Name",
     "category": "natural",
     "nutri_grade": "A",
-    "reason": "Brief 1-sentence nutritional reason why it is healthier",
-    "savings": "Key benefit e.g. 100% natural whole food, zero preservatives"
+    "reason": "1 clear sentence explaining why it is healthier",
+    "savings": "Specific savings e.g. 100% natural fiber, zero cane sugar",
+    "web_source": "Live Web Search"
   }
 ]`;
 
@@ -548,43 +569,59 @@ Respond ONLY with a valid JSON array matching this format:
     think: false,
     stream: false,
     options: {
-      num_predict: 200,
-      temperature: 0.2
+      num_predict: 220,
+      temperature: 0.1
     }
   };
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000);
+  // 2. Attempt local Ollama generation (trying Vite proxy and direct localhost)
+  const ollamaUrls = ['/api/ollama/api/generate', 'http://127.0.0.1:11434/api/generate'];
 
-  const res = await fetch('/api/ollama/api/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: controller.signal
-  });
-  clearTimeout(timeoutId);
+  for (const url of ollamaUrls) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-  if (!res.ok) {
-    throw new Error(`Ollama returned status ${res.status}`);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const rawText = data.response;
+        if (rawText) {
+          const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((item, idx) => ({
+              name: item.name || (webFindings[idx]?.name ?? 'Healthier Alternative'),
+              brand: item.brand || webFindings[idx]?.brand,
+              category: item.category === 'natural' ? 'natural' : 'packaged',
+              nutri_grade: (['A', 'B'].includes(item.nutri_grade) ? item.nutri_grade : 'A') as 'A' | 'B',
+              reason: item.reason || (webFindings[idx]?.reason ?? 'Healthier nutritional profile with lower sugar.'),
+              savings: item.savings || (webFindings[idx]?.savings ?? 'Low sugar & clean ingredients'),
+              target_id: webFindings[idx]?.target_id,
+              web_source: `Local AI (${modelName}) + Web Search`,
+              web_url: webFindings[idx]?.web_url
+            }));
+          }
+        }
+      }
+    } catch {
+      // Try next url or fallback to live web findings
+    }
   }
 
-  const data = await res.json();
-  const rawText = data.response;
-  if (!rawText) throw new Error('Empty response from Ollama.');
-
-  const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-  const parsed = JSON.parse(cleaned);
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error('AI response did not return an array.');
+  // 3. Fallback: If local Ollama is offline or running on cloud Vercel,
+  // return the live web-searched recommendations!
+  if (webFindings.length > 0) {
+    return webFindings;
   }
 
-  return parsed.map((item) => ({
-    name: item.name || 'Healthier Alternative',
-    brand: item.brand,
-    category: item.category === 'natural' ? 'natural' : 'packaged',
-    nutri_grade: (['A', 'B', 'C'].includes(item.nutri_grade) ? item.nutri_grade : 'A') as 'A' | 'B',
-    reason: item.reason || 'Nutrient-dense alternative with lower sugar and saturated fats.',
-    savings: item.savings || 'Lower sugar & higher fiber'
-  }));
+  // 4. Offline Fallback: Contextual Database
+  return getContextualAlternatives(product);
 }
